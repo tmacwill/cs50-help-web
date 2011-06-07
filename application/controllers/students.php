@@ -93,21 +93,9 @@ class Students extends CI_Controller {
 	 * Student has been helped
 	 *
 	 */
-	public function help() {
+	public function helped() {
 		$this->Student->set_state($this->input->post('id'), Student::STATE_HELPED);
 		echo json_encode(array('success' => true));
-	}
-
-	/**
-	 * Get the position of the given student
-	 *
-	 */
-	public function position() {
-		$result = $this->Student->get_position($this->input->post('id'));
-		if ($result) {
-			$result['success'] = true;
-			echo json_encode($result);
-		}
 	}
 
 	/**
@@ -115,12 +103,10 @@ class Students extends CI_Controller {
 	 *
 	 */
 	public function queue() {
-		$queue = $this->Student->get_queue();
+		$queue = $this->Student->get_queue($this->input->post('force'));
 		if ($queue) {
-			echo json_encode(array(
-				'success' => true,
-				'queue' => $queue
-			));
+			$queue['success'] = true;
+			echo json_encode($queue);
 		}
 	}
 }

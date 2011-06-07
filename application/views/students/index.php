@@ -3,6 +3,32 @@
 var student_id;
 var hand_up = false;
 
+function get_categories() {
+	var url = "<?= site_url('spreadsheets/categories'); ?>";
+	$.getJSON(url, function(response) {
+		for (option in response) {
+			var $option = $('<option>').attr('value', response[option]).text(response[option]);
+			$("#question-category").append($option);
+		}
+	});
+}
+
+function get_queue() {
+	var url = "<?= site_url('students/queue'); ?>";
+	$.getJSON(url, function(response) {
+		if (response.success) {
+			$("#queue").empty();
+			for (var item in response.queue) {
+				$("#queue").append($("<li>").text(response.queue[item].name));
+			}
+
+			get_queue();
+		}
+		else
+			show_error();
+	});
+}
+
 function handle_question_submit() {
 	if (hand_up)
 		put_hand_down();
@@ -28,9 +54,8 @@ function put_hand_up() {
 			student_id = response.id;
 			hand_up = true;
 		}
-		else {
+		else
 			show_error();
-		}
 	});
 }
 
@@ -47,18 +72,20 @@ function put_hand_down() {
 			$("#question-submit").attr("value", "Ask");
 			$("#question-name, #question-text").removeAttr("disabled");
 
-
 			student_id = null;
 			hand_up = false;
 		}
-		else {
+		else
 			show_error();
-		}
 	});
 }
 
 function show_error() {
 	alert("An error occurred. Try again");
+}
+
+function window_closed() {
+	var url = "<?= site_url('students/closed'); ?>"
 }
 
 $(document).ready(function() {
@@ -68,19 +95,15 @@ $(document).ready(function() {
 		return false;
 	});
 
-	var url = "<?= site_url('spreadsheets/categories'); ?>";
-	$.getJSON(url, function(response) {
-		for (option in response) {
-			var $option = $('<option>').attr('value', response[option]).text(response[option]);
-			$("#question-category").append($option);
-		}
-	});
+	get_categories();
+	get_initial_queue();
 });
 
 
 </script>
 
 <h1>CS50 Help</h1>
+<ul id="queue"></ul>
 <form action="#" id="question-form">
 	<select name="category" id="question-category"></select>
 	<input type="text" name="name" id="question-name" placeholder="Name" />

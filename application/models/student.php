@@ -17,8 +17,9 @@ class Student extends CI_Model {
 	const TF_COLUMN = 'tf';
 	const STATE_COLUMN = 'state';
 
-	// memcache instance
+	// memcache instance and constants
 	private $memcache;
+	const MEMCACHE_KEY_QUEUE = 'queue';
 
 	function __construct() {
 		parent::__construct();
@@ -30,20 +31,18 @@ class Student extends CI_Model {
 
 	/**
 	 * Add a single student
+	 * Side effect: clear queue from cache
 	 * @param $data [Array] Associative array containing student name, question text, and question category
 	 *
 	 */
 	public function add($data) {
 		$this->db->insert(self::TABLE, $data);
-
-		// added student means queue has changed, so clear cache
-		$this->memcache->flush();
-		// flush only guarantees cache is flushed within one second
-		sleep(1);
+		$this->memcache->delete(self::MEMCACHE_KEY_QUEUE);
 	}
 
 	/**
 	 * Dispatch a single student
+	 * Side effect: clear queue from cache
 	 * @param $tf [String] TF student has been dispatched to
 	 *
 	 */
@@ -52,67 +51,35 @@ class Student extends CI_Model {
 		$this->db->set(array(self::TF_COLUMN => $tf, self::STATE_COLUMN => self::STATE_HELPED))->where(self::ID_COLUMN, $id);
 		$this->db->update(self::TABLE);
 
-		// dispatched student means queue has changed, so clear cache
-		$this->memcache->flush();
-		// flush only guarantees cache is flushed within one second
-		sleep(1);
+		$this->memcache->delete(self::MEMCACHE_KEY_QUEUE);
 	}
 
 	/**
-	 * Get memcache key for the position of a student
-	 * Keys for position cache are in the format students:position:<id>
-	 * @param $id [Integer] ID of student
-	 * @return [String] Memcache key for student
+	 * Get an ordered queue of all students with their hand up.
+	 * @param $force [Boolean] If true, don't use long polling
 	 *
 	 */
-	public function get_memcache_position_key($id) {
-		return self::TABLE . ':position:' . $id;
-	}
-
-	/**
-	 * Get the position of a single student
-	 * @param $id [Integer] ID of student
-	 * @return Array with 'position' and 'changed' boolean flag
-	 *
-	 */
-	public function get_position($id) {
-		$key = $this->get_memcache_position_key($id);
+	public function get_queue($force = false) {
+		// check memcache for queue
+		$queue = $this->memcache->get(self::MEMCACHE_KEY_QUEUE);
 
 		// long-polling: reduce HTTP requests by retrying here (for 25 seconds) rather than from another request
-		for ($i = 0; $i < 25; $i++) {
-			// query cache for this student's position
-			$position = $this->memcache->get($key);
+		for ($i = 0; $i < 3; $i++) {
+			// cache key expired or not using long-polling, so go to database for updated value
+			if ($queue == null || $force) {
+				$queue = $this->db->order_by(self::TIMESTAMP_COLUMN, 'asc')->get_where(self::TABLE, 
+							array(self::STATE_COLUMN => self::STATE_HAND_UP))->result();
 
-			// cache key expired, so go to database for updated value
-			if ($position == null) {
-				$queue = $this->get_queue();
-				foreach ($queue as $index => $student) {
-					if ($student->id == $id) {
-						$position = $index;
-						break;
-					}
-				}
-
-				// cache position of student and return new value
-				$this->memcache->set($key, $position);
-				return array('position' => $position, 'changed' => true);
+				// cache result
+				$this->memcache->set(self::MEMCACHE_KEY_QUEUE, $queue);
+				return array('queue' => $queue, 'changed' => true);
 			}
 
 			// cache key still valid, so sleep and try again
 			sleep(1);
 		}
 
-		// unchanged after 25 seconds, so return value before server-side timeout
-		return array('position' => $position, 'changed' => false);
-	}
-
-	/**
-	 * Get an ordered queue of all students with their hand up.
-	 *
-	 */
-	public function get_queue() {
-		return $this->db->order_by(self::TIMESTAMP_COLUMN, 'asc')->get_where(self::TABLE, 
-				array(self::STATE_COLUMN => self::STATE_HAND_UP))->result();
+		return array('queue' => $queue, 'changed' => false);
 	}
 
 	/**
