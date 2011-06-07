@@ -12,6 +12,7 @@ CS50 Help Web utilizes a REST API. All calls return JSON, and will include a `su
 * `question`: Text of the student's question
 * `name`: Name of the student
 * `category`: Category the student's question falls into
+
 #### Returns
 * `id`: The ID of the newly added student
 
