@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>CS50 Help</title>
-	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+	<?php $this->carabiner->display(); ?>
 </head>
 
 <body>

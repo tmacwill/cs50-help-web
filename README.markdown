@@ -34,6 +34,11 @@ Student has been dispatched to a TF/CA.
 
 ***
 
+### GET /students/dispatched
+Retrive a list of dispatched students. Note: only a student's most recent dispatch will appear.
+### Returns
+* `dispatched`: Ordered array of students, including IDs, question text, category, TF, and timestamp
+
 ### POST /students/hand_down
 Student has put his or her hand down (and no longer needs assistance).
 #### Parameters

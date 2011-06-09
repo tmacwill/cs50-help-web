@@ -2,5 +2,5 @@ RewriteEngine on
 RewriteBase /cs50help
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond $1 !^(index\.php|img|js|css|robots\.txt|\.git)
+RewriteCond $1 !^(index\.php|assets|robots\.txt|\.git)
 RewriteRule ^(.*)$ index.php/$1 [L]
