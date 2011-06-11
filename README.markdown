@@ -7,46 +7,48 @@ CS50 Help Web utilizes a REST API. All calls return JSON, and will include a `su
 
 ## Routes
 
-### POST /students/add 
-Add a new student who has a question.
+### POST /questions/add 
+Add a new question.
 #### Parameters
 * `question`: Text of the student's question
 * `name`: Name of the student
 * `category`: Category the student's question falls into
 
 #### Returns
-* `id`: The ID of the newly added student
+* `id`: The ID of the newly added question
 
 ***
 
-### POST /students/closed
-Student has closed his or her window
+### POST /questions/closed
+Student has closed his or her window.
 #### Parameters
-* `id`: ID of the student who has closed his or her window
+* `id`: ID of the question that is no longer active
 
 ***
 
-### POST /students/dispatch
-Student has been dispatched to a TF/CA.
+### POST /questions/dispatch
+Question has been dispatched to a TF/CA.
 #### Parameters
-* `id`: ID of student who has been dispatched
-* `tf`: TF/CA student has been dispatched to
+* `id`: ID of question who has been dispatched
+* `tf`: TF/CA question has been dispatched to
 
 ***
 
-### GET /students/dispatched
-Retrive a list of dispatched students. Note: only a student's most recent dispatch will appear.
-### Returns
-* `dispatched`: Ordered array of students, including IDs, question text, category, TF, and timestamp
+### GET /questions/dispatched
+Retrieve a list of dispatched questions. Note: only a student's most recent dispatch will appear.
+#### Returns
+* `dispatched`: Ordered array of questions, including IDs, question text, show, category, TF, and timestamp
 
-### POST /students/hand_down
-Student has put his or her hand down (and no longer needs assistance).
+***
+
+### POST /questions/hand_down
+Student has put his or her hand down (and no longer needs assistance on the active question).
 #### Parameters
-* `id`: ID of the student who put his or her hand down
+* `id`: ID of the question that is no longer active
 
 ***
 
-### GET /students/queue
+### GET /questions/queue
 Retrieve the current state of the queue.
 #### Returns
 * `queue`: Ordered array of students, including IDs, question text, category, and timestamp

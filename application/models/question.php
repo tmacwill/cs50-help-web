@@ -36,6 +36,9 @@ class Question extends CI_Model {
 		if (!isset($_SESSION[self::MEMCACHE_KEY_DISPATCHED . self::MEMCACHE_SUFFIX_UPDATE]))
 			$_SESSION[self::MEMCACHE_KEY_DISPATCHED . self::MEMCACHE_SUFFIX_UPDATE] = '';
 
+		// end session so other requests can be processed
+		session_write_close();
+
 		// connect to memcache server
 		$this->memcache = new Memcache;
 		$this->memcache->connect('localhost', 11211) or die("Could not connect to memcache");
@@ -61,10 +64,12 @@ class Question extends CI_Model {
 	 *
 	 */
 	public function dispatch($id, $tf) {
-		// set all student's previous questions to complete
-		// TODO: grab student, get name from student, and use that name rather than passing it in, duh
-		//$this->db->set(array(self::STATE_COLUMN => self::STATE_COMPLETED))->where(array(self::NAME_COLUMN => $name, self::ID_COLUMN . ' <>' => $id));
-		//$this->db->update(self::TABLE);
+		// get the student associated with this question 
+		$student = $this->db->get_where(self::TABLE, array(self::ID_COLUMN => $id))->row();
+		// mark all student's previous questions as completed
+		$this->db->set(array(self::STATE_COLUMN => self::STATE_COMPLETED))->
+			where(array(self::NAME_COLUMN => $student->{self::NAME_COLUMN}, self::ID_COLUMN . ' <>' => $id));
+		$this->db->update(self::TABLE);
 
 		// mark student's current question as dispatched
 		$this->db->set(array(self::TF_COLUMN => $tf, self::STATE_COLUMN => self::STATE_DISPATCHED))->where(self::ID_COLUMN, $id);
@@ -105,6 +110,11 @@ class Question extends CI_Model {
 	public function long_poll($memcache_key, $state, $force = false) {
 		$update_key = $memcache_key . self::MEMCACHE_SUFFIX_UPDATE;
 
+		// get last update from session and end immediately so other requests can process
+		session_start();
+		$last_update = $_SESSION[$update_key];
+		session_write_close();
+
 		// long-polling: reduce HTTP requests by retrying here (for 25 seconds) rather than from another request
 		for ($i = 0; $i < self::LONG_POLLING_TIMEOUT; $i++) {
 			// query cache before going to database
@@ -128,8 +138,12 @@ class Question extends CI_Model {
 			}
 
 			// cache has been updated since our last read
-			else if ($_SESSION[$update_key] != $this->memcache->get($update_key)) {
+			else if ($last_update != $this->memcache->get($update_key)) {
+				// restart session so we can store new key
+				session_start();
 				$_SESSION[$update_key] = $this->memcache->get($update_key);
+				session_write_close();
+
 				return array($memcache_key => $result, 'changed' => true, 'source' => 'memcache');
 			}
 
@@ -149,6 +163,7 @@ class Question extends CI_Model {
 	public function set_state($id, $state) {
 		$this->db->set(self::STATE_COLUMN, $state)->where(self::ID_COLUMN, $id);
 		$this->db->update(self::TABLE);
+		$this->memcache->delete(self::MEMCACHE_KEY_QUEUE);
 	}
 }
 

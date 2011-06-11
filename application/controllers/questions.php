@@ -2,6 +2,7 @@
 
 class Questions extends CI_Controller {
 	const FILTER = 'htmlspecialchars';
+	const AUTH_COOKIE = 'cs50help_auth';
 	
 	// javascript files to load in view
 	private $js_assets = array(
@@ -39,15 +40,9 @@ class Questions extends CI_Controller {
 		// run form validation
 		$this->form_validation->set_rules($rules);
 		$this->form_validation->run();
-	}
 
-	/**
-	 * Main page for student help
-	 *
-	 */
-	public function index() {
-		$this->carabiner->js('main.js');
-		$this->template->render();
+		// make sure user is authenticated if need by
+		$this->authenticate();
 	}
 
 	/**
@@ -60,6 +55,17 @@ class Questions extends CI_Controller {
 			'success' => true,
 			'id' => $this->db->insert_id()
 		));
+	}
+
+	public function authenticate() {
+		// array of restricted URLs
+		$restricted = array('', 'index');
+
+		// redirect user if trying to access a restricted action
+		$action = $this->uri->segment(2);
+		if (!isset($_COOKIE[self::AUTH_COOKIE]) && in_array($action, $restricted))
+			redirect('questions/login');
+			
 	}
 
 	/**
@@ -102,13 +108,21 @@ class Questions extends CI_Controller {
 	}
 
 	/**
+	 * Main page for student help
+	 *
+	 */
+	public function index() {
+		$this->carabiner->js('main.js');
+		$this->template->render();
+	}
+
+	/**
 	 * Log the student in.
-	 * TODO: CS50 ID
 	 *
 	 */
 	public function login() {
 		if ($this->input->post()) {
-			setcookie('cs50help_auth', $this->input->post('name'));
+			setcookie(self::AUTH_COOKIE, $this->input->post('name'));
 			redirect('questions/index');
 		}
 		else
