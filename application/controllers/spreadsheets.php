@@ -7,6 +7,18 @@ class Spreadsheets extends CI_Controller {
 	}
 
 	public function categories() {
-		echo json_encode($this->Spreadsheet->get_categories());
+		$categories = $this->Spreadsheet->get_categories();
+		if ($categories) {
+			$categories['success'] = true;
+			echo json_encode($categories);
+		}
+	}
+
+	public function schedule() {
+		$schedule = $this->Spreadsheet->get_schedule();
+		if ($schedule) {
+			$schedule['success'] = true;
+			echo json_encode($schedule);
+		}
 	}
 }

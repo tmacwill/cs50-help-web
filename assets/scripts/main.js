@@ -5,6 +5,10 @@ var hand_up = false;
 var queue = [];
 var question_id = null;
 
+/**
+ * Add a new question to the queue
+ *
+ */
 function add_question() {
 	var url = BASE_URL + 'questions/add';
 
@@ -28,6 +32,10 @@ function add_question() {
 	});
 }
 
+/**
+ * Disallow students from asking a question (e.g. they already have an active question)
+ *
+ */
 function disable_form() {
 	$('#question-submit').attr('value', 'Put your hand down');
 	$('#question-name, #question-text').val('').attr('disabled', 'disabled');
@@ -35,6 +43,10 @@ function disable_form() {
 	hand_up = true;
 }
 
+/**
+ * Allow students to ask a question (e.g. they do not have an active question)
+ *
+ */
 function enable_form() {
 	$('#question-submit').attr('value', 'Ask');
 	$('#question-text').removeAttr('disabled');
@@ -42,16 +54,25 @@ function enable_form() {
 	hand_up = false;
 }
 
+/**
+ * Get the question categories for today
+ *
+ */
 function get_categories() {
 	var url = BASE_URL + 'spreadsheets/categories';
 	$.getJSON(url, function(response) {
-		for (option in response) {
-			var $option = $('<option>').attr('value', response[option]).text(response[option]);
+		for (option in response.categories) {
+			var $option = $('<option>').attr('value', response.categories[option]).text(response.categories[option]);
 			$("#question-category").append($option);
 		}
 	});
 }
 
+/**
+ * Get all students' most recent dispatches today
+ * @param initial True iff this is the first time getting dispatches
+ *
+ */
 function get_dispatched(initial) {
 	var url = BASE_URL + 'questions/dispatched';
 	// force immediate response if called for the first time
@@ -81,6 +102,11 @@ function get_dispatched(initial) {
 	});
 }
 
+/**
+ * Get the current queue
+ * @param initial True iff this is the first time getting the queue
+ *
+ */
 function get_queue(initial) {
 	var url = BASE_URL + 'questions/queue';
 	// force an immediate response if called for the first time
@@ -97,7 +123,6 @@ function get_queue(initial) {
 				queue = response.queue;
 
 				for (var item in queue) {
-					console.log(queue[item]);
 					var li = $('<li>');
 					li.text(queue[item].name + (parseInt(queue[item].show) ? ' - ' + queue[item].question : ''));
 
@@ -133,6 +158,10 @@ function get_queue(initial) {
 	});
 }
 
+/**
+ * Event handler for hitting the ask / hand down button
+ *
+ */
 function handle_question_submit() {
 	if (hand_up)
 		put_hand_down();
@@ -140,6 +169,10 @@ function handle_question_submit() {
 		add_question();
 }
 
+/**
+ * Student has put their hand down for the current question
+ *
+ */
 function put_hand_down() {
 	var url = BASE_URL + 'questions/hand_down';
 	var data = {
@@ -158,13 +191,20 @@ function put_hand_down() {
 	});
 }
 
+/**
+ * Show an error message
+ * @param message Message text
+ *
+ */
 function show_error(message) {
 	alert(message || "An error occurred. Please alert the dispatcher.");
 }
 
 $(document).ready(function() {
+	// CS50 ID supplies authentication cookie
 	auth = $.cookie('cs50help_auth');
 
+	// ask / hand down button pressed
 	$("#question-form").submit(function(e) {
 		handle_question_submit();
 		e.preventDefault();

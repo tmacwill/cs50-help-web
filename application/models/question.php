@@ -51,10 +51,16 @@ class Question extends CI_Model {
 	 *
 	 */
 	public function add($data) {
-		// insert new row in database and expire cache
-		$this->db->insert(self::TABLE, $data);
-		$this->memcache->delete(self::MEMCACHE_KEY_QUEUE);
-		$this->memcache->set(self::MEMCACHE_KEY_QUEUE . self::MEMCACHE_SUFFIX_UPDATE, (string)time());
+		// check if student already has his/her hand up
+		$student = $this->db->get_where(self::TABLE, array(self::NAME_COLUMN => $data[self::NAME_COLUMN], 
+					self::STATE_COLUMN => self::STATE_HAND_UP))->row();
+
+		// student is not present yet, so add new question
+		if (!$student) {
+			$this->db->insert(self::TABLE, $data);
+			$this->memcache->delete(self::MEMCACHE_KEY_QUEUE);
+			$this->memcache->set(self::MEMCACHE_KEY_QUEUE . self::MEMCACHE_SUFFIX_UPDATE, (string)time());
+		}
 	}
 
 	/**
@@ -107,7 +113,7 @@ class Question extends CI_Model {
 	 * @param $force [Boolean] If true, force an immediate read from DB
 	 *
 	 */
-	public function long_poll($memcache_key, $state, $force = false) {
+	private function long_poll($memcache_key, $state, $force = false) {
 		$update_key = $memcache_key . self::MEMCACHE_SUFFIX_UPDATE;
 
 		// get last update from session and end immediately so other requests can process
