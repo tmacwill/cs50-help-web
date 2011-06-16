@@ -16,7 +16,7 @@ function add_question() {
 		name: auth,
 		question: $('#question-text').val(),
 		category: $('#question-category').val(),
-		show: $('#question-show').is(':checked')
+		show: $('#question-show').is(':checked') ? 1 : 0
 	};
 
 	disable_form();
