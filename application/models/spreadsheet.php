@@ -46,6 +46,9 @@ class Spreadsheet extends CI_Model {
 	 *
 	 */
 	public function get_schedule() {
+		// get all TFs/CAs
+		$staff = $this->get_staff();
+
 		// get XML representation of GCal
 		$curl = curl_init(self::SCHEDULE_URL);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
@@ -59,9 +62,17 @@ class Spreadsheet extends CI_Model {
 			$date = $matches[1];
 			if (date('D M d, Y') == $matches[1]) {
 				// title of event must be CSV of staff
-				return array('schedule' => explode(',', (string)$event->title));
+				$on_duty = explode(',', (string)$event->title);
+				break;
 			}
 		}
+
+		$return_array = array();
+		foreach ($staff['staff'] as $tf) {
+			$return_array[] = array('name' => $tf, 'on_duty' => in_array(trim($tf), $on_duty));
+		}
+
+		return array('schedule' => $return_array);
 	}
 
 	public function get_staff() {
