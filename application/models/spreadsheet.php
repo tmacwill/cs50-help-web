@@ -1,27 +1,20 @@
 <?php
 
 class Spreadsheet extends CI_Model {
-	const CATEGORIES_URL = 'https://spreadsheets.google.com/spreadsheet/pub?hl=en_US&hl=en_US&key=0Ah3bwLWjJUiPdFR0S09PaFVPWS12ZHJXdDNzSFJxUlE&output=csv';
-	const SCHEDULE_URL = 'https://spreadsheets.google.com/spreadsheet/pub?hl=en_US&hl=en_US&key=0Ah3bwLWjJUiPdHB3eGtuVDlLYlBjaFBUX25yT0Mtb3c&output=csv';
+	const CATEGORIES_URL = 'https://spreadsheets.google.com/spreadsheet/pub?hl=en_US&hl=en_US&key=0Ah3bwLWjJUiPdDg1OEhGNmZORTlNcHVRUi1XdXRjWXc&single=true&gid=1&output=csv';
+	const SCHEDULE_URL = 'https://www.google.com/calendar/feeds/djsch5ddcameaq4637tjio45r4%40group.calendar.google.com/public/basic';
+	const STAFF_URL = 'https://spreadsheets.google.com/spreadsheet/pub?hl=en_US&hl=en_US&key=0Ah3bwLWjJUiPdDg1OEhGNmZORTlNcHVRUi1XdXRjWXc&single=true&gid=0&output=csv';
 
 	public function __construct() {
 		parent::__construct();
 	}
 
 	public function get_categories() {
-		return $this->get_column_by_date(self::CATEGORIES_URL);
-	}
-
-	public function get_schedule() {
-		return $this->get_column_by_date(self::SCHEDULE_URL);
-	}
-
-	private function get_column_by_date($url) {
 		// get current date as month/day/year, matching GDoc's format
 		$date = date('n/j/Y');
 
 		// get CSV of published spreadsheet
-		$curl = curl_init($url);
+		$curl = curl_init(self::CATEGORIES_URL);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		$spreadsheet = explode("\n", curl_exec($curl));
 		curl_close($curl);
@@ -45,10 +38,48 @@ class Spreadsheet extends CI_Model {
 
 		// remote date from list of categories
 		array_shift($return_array);
-		if ($url == self::CATEGORIES_URL)
-			return array('categories' => $return_array);
-		else if ($url == self::SCHEDULE_URL)
-			return array('schedule' => $return_array);
+		return array('categories' => $return_array);
+	}
+
+	/**
+	 * Get the staff on duty today based on a GCal
+	 *
+	 */
+	public function get_schedule() {
+		// get XML representation of GCal
+		$curl = curl_init(self::SCHEDULE_URL);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$schedule_xml = new SimpleXMLElement(curl_exec($curl));
+		curl_close($curl);
+
+		// search for today's date
+		foreach ($schedule_xml->entry as $event) {
+			$matches = array();
+			preg_match('/When: (\w+ \w+ \d+, \d+)/', (string)$event->summary, $matches);
+			$date = $matches[1];
+			if (date('D M d, Y') == $matches[1]) {
+				// title of event must be CSV of staff
+				return array('schedule' => explode(',', (string)$event->title));
+			}
+		}
+	}
+
+	public function get_staff() {
+		// get CSV of published spreadsheet
+		$curl = curl_init(self::STAFF_URL);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$spreadsheet = explode("\n", curl_exec($curl));
+		curl_close($curl);
+
+		// iterate over rows, skipping first row
+		$return_array = array();
+		array_shift($spreadsheet);
+		foreach ($spreadsheet as $row_csv) {
+			$row = explode(",", $row_csv);
+			$return_array[] = $row[0];
+		}
+
+		return array('staff' => $return_array);
 	}
 }
 

@@ -21,4 +21,12 @@ class Spreadsheets extends CI_Controller {
 			echo json_encode($schedule);
 		}
 	}
+
+	public function staff() {
+		$staff = $this->Spreadsheet->get_staff();
+		if ($staff) {
+			$staff['success'] = true;
+			echo json_encode($staff);
+		}
+	}
 }
