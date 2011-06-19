@@ -82,7 +82,7 @@ class Questions extends CI_Controller {
 	 *
 	 */
 	public function dispatch() {
-		$this->Question->dispatch($this->input->post('id'), $this->input->post('tf'));
+		$this->Question->dispatch(explode(',', $this->input->post('ids')), $this->input->post('tf'));
 		echo json_encode(array('success' => true));
 	}
 

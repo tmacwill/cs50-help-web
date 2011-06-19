@@ -63,13 +63,15 @@ class Spreadsheet extends CI_Model {
 			if (date('D M d, Y') == $matches[1]) {
 				// title of event must be CSV of staff
 				$on_duty = explode(',', (string)$event->title);
+				$on_duty = array_map('trim', $on_duty);
 				break;
 			}
 		}
 
+		// determine if each staff member is on duty today
 		$return_array = array();
 		foreach ($staff['staff'] as $tf) {
-			$return_array[] = array('name' => $tf, 'on_duty' => in_array(trim($tf), $on_duty));
+			$return_array[] = array('name' => trim($tf), 'on_duty' => in_array(trim($tf), $on_duty));
 		}
 
 		return array('schedule' => $return_array);
@@ -87,7 +89,7 @@ class Spreadsheet extends CI_Model {
 		array_shift($spreadsheet);
 		foreach ($spreadsheet as $row_csv) {
 			$row = explode(",", $row_csv);
-			$return_array[] = $row[0];
+			$return_array[] = trim($row[0]);
 		}
 
 		return array('staff' => $return_array);

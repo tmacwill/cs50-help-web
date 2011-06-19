@@ -64,21 +64,28 @@ class Question extends CI_Model {
 	}
 
 	/**
-	 * Dispatch a single question
-	 * Side effect: clear dispatch history from cache
+	 * Dispatch a list of questions to a TF
+	 * Side effect: clear dispatch history and queue from cache
+	 * @param $ids [Array] Array of question IDs to dispatch
 	 * @param $tf [String] TF student has been dispatched to
 	 *
 	 */
-	public function dispatch($id, $tf) {
-		// get the student associated with this question 
-		$student = $this->db->get_where(self::TABLE, array(self::ID_COLUMN => $id))->row();
-		// mark all student's previous questions as completed
+	public function dispatch($ids, $tf) {
+		// get names corresponding to IDs
+		$name_results = $this->db->select('name')->where_in('id', $ids)->get(self::TABLE)->result();
+
+		// build array of names
+		$names = array();
+		foreach ($name_results as $name)
+			$names[] = $name->name;
+
+		// mark all students' previous questions as completed
 		$this->db->set(array(self::STATE_COLUMN => self::STATE_COMPLETED))->
-			where(array(self::NAME_COLUMN => $student->{self::NAME_COLUMN}, self::ID_COLUMN . ' <>' => $id));
+			where_in(self::NAME_COLUMN, $names)->where(array(self::STATE_COLUMN => self::STATE_HAND_UP));
 		$this->db->update(self::TABLE);
 
-		// mark student's current question as dispatched
-		$this->db->set(array(self::TF_COLUMN => $tf, self::STATE_COLUMN => self::STATE_DISPATCHED))->where(self::ID_COLUMN, $id);
+		// mark questions as dispatched
+		$this->db->set(array(self::TF_COLUMN => $tf, self::STATE_COLUMN => self::STATE_DISPATCHED))->where_in(self::ID_COLUMN, $ids);
 		$this->db->update(self::TABLE);
 
 		// expire both queue and dispatch cache
