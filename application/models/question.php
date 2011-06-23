@@ -110,7 +110,12 @@ class Question extends CI_Model {
 	 *
 	 */
 	public function get_queue($force = false) {
-		return $this->long_poll(self::MEMCACHE_KEY_QUEUE, self::STATE_HAND_UP, $force);
+		$queue = $this->long_poll(self::MEMCACHE_KEY_QUEUE, self::STATE_HAND_UP, $force);
+		$i = 0;
+		foreach ($queue[self::MEMCACHE_KEY_QUEUE] as $q)
+			$q->position = ++$i;
+		
+		return $queue;
 	}
 
 	/**

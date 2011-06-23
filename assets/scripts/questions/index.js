@@ -7,7 +7,7 @@ var question_id = null;
 Ext.onReady(function() {
 	Ext.create('Ext.data.Store', {
 		storeId: 'queue_store',
-		fields: ['id', 'name', 'question'],
+		fields: ['id', 'name', 'question', 'position'],
 		proxy: {
 			type: 'memory',
 			reader:  {
@@ -76,8 +76,9 @@ Ext.onReady(function() {
 				title: 'Queue',
 				store: Ext.data.StoreManager.lookup('queue_store'),
 				columns: [
-					{ header: 'Name', dataIndex: 'name', flex: 1 },
-					{ header: 'Question', dataIndex: 'question', flex: 1 },
+					{ header: 'Position', dataIndex: 'position', flex: 1 },
+					{ header: 'Name', dataIndex: 'name', flex: 5 },
+					{ header: 'Question', dataIndex: 'question', flex: 5 },
 				],
 			}, {
 				xtype: 'tabpanel',
