@@ -8,6 +8,13 @@ class Questions extends CI_Controller {
 	private $js_assets = array(
 		array('http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js'),
 		array('jquery.cookie.js'),
+		array('ext/bootstrap.js'),
+	);
+
+	private $css_assets = array(
+		array('resources/css/ext-all.css'),
+		array('resources/css/ext-all-gray.css'),
+		array('cs50help.css'),
 	);
 
 	public function __construct() {
@@ -16,6 +23,7 @@ class Questions extends CI_Controller {
 
 		// load assets
 		$this->carabiner->js($this->js_assets);
+		$this->carabiner->css($this->css_assets);
 
 		// form validator should escape all input
 		$rules = array(
@@ -41,7 +49,7 @@ class Questions extends CI_Controller {
 		$this->form_validation->set_rules($rules);
 		$this->form_validation->run();
 
-		// make sure user is authenticated if need by
+		// make sure user is authenticated if need be
 		$this->authenticate();
 	}
 
@@ -112,7 +120,8 @@ class Questions extends CI_Controller {
 	 *
 	 */
 	public function index() {
-		$this->carabiner->js('main.js');
+		//$this->carabiner->js('main.js');
+		$this->carabiner->js('questions/index.js');
 		$this->template->render();
 	}
 
@@ -125,8 +134,10 @@ class Questions extends CI_Controller {
 			setcookie(self::AUTH_COOKIE, $this->input->post('name'));
 			redirect('questions/index');
 		}
-		else
+		else {
+			$this->carabiner->js('questions/login.js');
 			$this->template->render();
+		}
 	}
 
 	/**

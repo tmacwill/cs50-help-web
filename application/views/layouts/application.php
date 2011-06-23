@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>CS50 Help</title>
+	<script> var site_url = "<?= site_url(); ?>"; </script>
 	<?php $this->carabiner->display(); ?>
 </head>
 
@@ -11,7 +12,7 @@
     
     <?php echo $this->template->yield(); ?>
     
-	<p>Page rendered in {elapsed_time} seconds using {memory_usage}.</p>
+	<!--p>Page rendered in {elapsed_time} seconds using {memory_usage}.</p-->
 
 </body>
 </html>
