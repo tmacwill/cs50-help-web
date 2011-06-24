@@ -81,7 +81,7 @@ class Spreadsheet extends CI_Model {
 				$staff['staff'][$key]['on_duty'] = false;
 		}
 
-		return array('schedule' => $staff);
+		return array('schedule' => $staff['staff']);
 	}
 
 	public function get_staff() {
