@@ -5,6 +5,11 @@ class Spreadsheet extends CI_Model {
 	const SCHEDULE_URL = 'https://www.google.com/calendar/feeds/djsch5ddcameaq4637tjio45r4%40group.calendar.google.com/public/basic';
 	const STAFF_URL = 'https://spreadsheets.google.com/spreadsheet/pub?hl=en_US&hl=en_US&key=0Ah3bwLWjJUiPdDg1OEhGNmZORTlNcHVRUi1XdXRjWXc&single=true&gid=0&output=csv';
 
+	const USERNAME_COLUMN = 'username';
+	const NAME_COLUMN = 'name';
+	const PHONE_COLUMN = 'phone';
+	const EMAIL_COLUMN = 'email';
+
 	public function __construct() {
 		parent::__construct();
 	}
@@ -69,15 +74,14 @@ class Spreadsheet extends CI_Model {
 		}
 
 		// determine if each staff member is on duty today
-		$return_array = array();
-		foreach ($staff['staff'] as $tf) {
+		foreach ($staff['staff'] as $key => $value) {
 			if (isset($on_duty))
-				$return_array[] = array('name' => trim($tf), 'on_duty' => in_array(trim($tf), $on_duty));
+				$staff['staff'][$key]['on_duty'] = in_array($value['username'], $on_duty);
 			else
-				$return_array[] = array('name' => trim($tf), 'on_duty' => false);
+				$staff['staff'][$key]['on_duty'] = false;
 		}
 
-		return array('schedule' => $return_array);
+		return array('schedule' => $staff);
 	}
 
 	public function get_staff() {
@@ -87,12 +91,33 @@ class Spreadsheet extends CI_Model {
 		$spreadsheet = explode("\n", curl_exec($curl));
 		curl_close($curl);
 
+		// determine column indices
+		$username_col = 0;
+		$name_col = 0;
+		$email_col = 0;
+		$phone_col = 0;
+		foreach (explode(',', $spreadsheet[0]) as $key => $value) {
+			if (strtolower(trim($value)) == self::USERNAME_COLUMN)
+				$username_col = $key;
+			else if (strtolower(trim($value)) == self::NAME_COLUMN)
+				$name_col = $key;
+			else if (strtolower(trim($value)) == self::EMAIL_COLUMN)
+				$email_col = $key;
+			else if (strtolower(trim($value)) == self::PHONE_COLUMN)
+				$phone_col = $key;
+		}
+
 		// iterate over rows, skipping first row
 		$return_array = array();
 		array_shift($spreadsheet);
 		foreach ($spreadsheet as $row_csv) {
 			$row = explode(",", $row_csv);
-			$return_array[] = trim($row[0]);
+			$return_array[] = array(
+				self::USERNAME_COLUMN => trim($row[$username_col]),
+				self::NAME_COLUMN => trim($row[$name_col]),
+				self::EMAIL_COLUMN => trim($row[$email_col]),
+				self::PHONE_COLUMN => trim($row[$phone_col]),
+			);
 		}
 
 		return array('staff' => $return_array);
