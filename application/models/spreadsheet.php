@@ -71,7 +71,10 @@ class Spreadsheet extends CI_Model {
 		// determine if each staff member is on duty today
 		$return_array = array();
 		foreach ($staff['staff'] as $tf) {
-			$return_array[] = array('name' => trim($tf), 'on_duty' => in_array(trim($tf), $on_duty));
+			if (isset($on_duty))
+				$return_array[] = array('name' => trim($tf), 'on_duty' => in_array(trim($tf), $on_duty));
+			else
+				$return_array[] = array('name' => trim($tf), 'on_duty' => false);
 		}
 
 		return array('schedule' => $return_array);
