@@ -1,3 +1,10 @@
+<script>
+
+var identity = "<?= $identity ?>";
+var name = "<?= isset($name) ? $name : '' ?>";
+
+</script>
+
 <!--h1>CS50 Help</h1>
 <h2 id="current-position" style="display: none">Your position is: <span id="current-position-value"></span></h2>
 <ul id="queue"></ul>

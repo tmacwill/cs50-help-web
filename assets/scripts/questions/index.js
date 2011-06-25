@@ -1,4 +1,3 @@
-var auth = null;
 var current_position = 0;
 var hand_up = false;
 var queue = [];
@@ -7,7 +6,7 @@ var question_id = null;
 Ext.onReady(function() {
 	Ext.create('Ext.data.Store', {
 		storeId: 'queue_store',
-		fields: ['id', 'name', 'question', 'position'],
+		fields: ['id', 'student_id', 'name', 'question', 'position'],
 		proxy: {
 			type: 'memory',
 			reader:  {
@@ -89,9 +88,6 @@ Ext.onReady(function() {
 		}]
 	});
 
-	// CS50 ID supplies authentication cookie
-	auth = $.cookie('cs50help_auth');
-
 	// ask / hand down button pressed
 	$("#question-form").submit(function(e) {
 		handle_question_submit();
@@ -122,7 +118,8 @@ function add_question() {
 	var url = site_url + 'questions/add';
 
 	var data = {
-		name: auth,
+		student_id: identity,
+		name: name,
 		question: Ext.getCmp('question-text').getValue(),
 		category: $('#question-category').val(),
 		show: Number(Ext.getCmp('question-show').getValue()),
@@ -237,13 +234,12 @@ function get_queue(initial) {
 				store.loadData(response.queue);
 				
 				// get our question from the store if it exists
-				question_index = store.findExact('name', auth);
-				if (question_index)
+				question_index = store.findExact('student_id', identity);
+				if (question_index > -1)
 					question_id = store.getAt(question_index).data.id;
 			}
 
 			if (initial) {
-				console.log(question_id);
 				// disable form if we have already asked a question
 				if (question_id)
 					disable_form();

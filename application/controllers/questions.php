@@ -2,7 +2,6 @@
 
 class Questions extends CI_Controller {
 	const FILTER = 'htmlspecialchars';
-	const AUTH_COOKIE = 'cs50help_auth';
 	
 	// javascript files to load in view
 	private $js_assets = array(
@@ -51,10 +50,17 @@ class Questions extends CI_Controller {
 
 		// make sure user is authenticated if need be
 		$this->authenticate();
+
+		// send user info to view
+		session_start();
+		$this->template->set('identity', substr($_SESSION['user']['identity'], strlen('https://id.cs50.net/')));
+		if (isset($_SESSION['user']['fullname']))
+			$this->template->set('name', $_SESSION['user']['fullname']);
+		session_write_close();
 	}
 
 	/**
-	 * Add a new student
+	 * Add a new question
 	 *
 	 */
 	public function add() {
@@ -71,9 +77,14 @@ class Questions extends CI_Controller {
 
 		// redirect user if trying to access a restricted action
 		$action = $this->uri->segment(2);
-		if (!isset($_COOKIE[self::AUTH_COOKIE]) && in_array($action, $restricted))
-			redirect('questions/login');
-			
+		session_start();
+		if (!isset($_SESSION['user']) && in_array($action, $restricted)) {
+			if ($_REQUEST['format'] == 'json')
+				echo json_encode(array('success' => false));
+			else
+				redirect('auth/login');
+		}
+		session_write_close();
 	}
 
 	/**
@@ -123,21 +134,6 @@ class Questions extends CI_Controller {
 		//$this->carabiner->js('main.js');
 		$this->carabiner->js('questions/index.js');
 		$this->template->render();
-	}
-
-	/**
-	 * Log the student in.
-	 *
-	 */
-	public function login() {
-		if ($this->input->post()) {
-			setcookie(self::AUTH_COOKIE, $this->input->post('name'));
-			redirect('questions/index');
-		}
-		else {
-			$this->carabiner->js('questions/login.js');
-			$this->template->render();
-		}
 	}
 
 	/**
