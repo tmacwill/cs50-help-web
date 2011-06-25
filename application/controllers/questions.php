@@ -53,7 +53,8 @@ class Questions extends CI_Controller {
 
 		// send user info to view
 		session_start();
-		$this->template->set('identity', substr($_SESSION['user']['identity'], strlen('https://id.cs50.net/')));
+		if (isset($_SESSION['user']['identity']))
+			$this->template->set('identity', substr($_SESSION['user']['identity'], strlen('https://id.cs50.net/')));
 		if (isset($_SESSION['user']['fullname']))
 			$this->template->set('name', $_SESSION['user']['fullname']);
 		session_write_close();
