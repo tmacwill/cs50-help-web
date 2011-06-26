@@ -74,14 +74,16 @@ class Questions extends CI_Controller {
 
 	public function authenticate() {
 		// array of restricted URLs
-		$restricted = array('', 'index');
+		$restricted = array('', 'closed', 'dispatch', 'dispatched', 'hand_down', 'index', 'queue');
 
 		// redirect user if trying to access a restricted action
 		$action = $this->uri->segment(2);
 		session_start();
 		if (!isset($_SESSION['user']) && in_array($action, $restricted)) {
-			if ($_REQUEST['format'] == 'json')
+			if ($_REQUEST['format'] == 'json') {
 				echo json_encode(array('success' => false));
+				exit;
+			}
 			else
 				redirect('auth/login');
 		}

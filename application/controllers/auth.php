@@ -11,8 +11,12 @@ class Auth extends CI_Controller {
 		session_start();
 		if (isset($_SESSION['user']))
 			redirect('questions/index');
-		else
-			redirect(CS50::getLoginUrl(self::STATE, self::TRUST_ROOT, self::RETURN_TO));
+		else {
+			$return_to = self::RETURN_TO;
+			if ($_REQUEST['format'])
+				$return_to .= '?format=' . $_REQUEST['format'];
+			redirect(CS50::getLoginUrl(self::STATE, self::TRUST_ROOT, $return_to));
+		}
 	}
 
 	function logout() {
@@ -24,11 +28,26 @@ class Auth extends CI_Controller {
 
 	function return_to() {
 		$user = CS50::getUser(self::STATE, self::RETURN_TO);
-		session_start();
 		if ($user !== false)
 			$_SESSION['user'] = $user;
+
+		$identity = substr($user['identity'], strlen('https://id.cs50.net/'));
+		$name = $user['fullname'];
 		
-		redirect('questions/index');
+		if ($_REQUEST['format'] == 'json') {
+			echo json_encode(array(
+				'user' => array(
+					'identity' => $identity,
+					'name' => $name,
+				)
+			));
+		}
+
+		else if ($_REQUEST['format'] == 'ipad') 
+			header('Location: cs50help://user/' . $identity . '/' . $name . '/' . session_id());
+
+		else
+			redirect('questions/index');
 	}
 }
 
