@@ -76,7 +76,7 @@ Ext.onReady(function() {
 				store: Ext.data.StoreManager.lookup('queue_store'),
 				columns: [
 					{ header: 'Position', dataIndex: 'position', flex: 1 },
-					{ header: 'Name', dataIndex: 'name', flex: 5 },
+					{ header: 'Name', dataIndex: 'name', flex: 2 },
 					{ header: 'Question', dataIndex: 'question', flex: 5 },
 				],
 			}, {
@@ -93,12 +93,6 @@ Ext.onReady(function() {
 		handle_question_submit();
 		e.preventDefault();
 		return false;
-	});
-
-	Ext.getCmp('tabs').addListener('tabchange', function(tabs, new_panel, old_panel, options) {
-		var box = tabs.getBox();
-		old_panel.update('');
-		new_panel.update('<iframe id="f1d0dfd2a4" name="f141f20094" scrolling="no" style="border-top-style: none; border-right-style: none; border-bottom-style: none; border-left-style: none; border-width: initial; border-color: initial; overflow-x: hidden; overflow-y: hidden; height: ' + box.height + 'px; width: ' + box.width + 'px;" class="fb_ltr" src="http://www.facebook.com/plugins/livefeed.php?always_post_to_friends=false&amp;api_key=137798392964646&amp;height=' + box.height + '&amp;locale=en_US&amp;sdk=joey&amp;session_key=2.28eXzVeOdu64sb4oZNgH2g__.3600.1295503200-6454&amp;width=' + box.width + '&amp;xid=' + new_panel.id.substring('tab-'.length) + '"></iframe>');
 	});
 
 	// timeout prevents eternally loading favicon 
@@ -173,8 +167,8 @@ function get_categories() {
 			var tab = tabs.add({
 				title: response.categories[i],
 				id: 'tab-' + response.categories[i],
-				html: (i == 0) ? '<iframe id="f1d0dfd2a4" name="f141f20094" scrolling="no" style="border-top-style: none; border-right-style: none; border-bottom-style: none; border-left-style: none; border-width: initial; border-color: initial; overflow-x: hidden; overflow-y: hidden; height: ' + box.height + 'px; width: ' + box.width + 'px;" class="fb_ltr" src="http://www.facebook.com/plugins/livefeed.php?always_post_to_friends=false&amp;api_key=137798392964646&amp;height=' + box.height + '&amp;locale=en_US&amp;sdk=joey&amp;session_key=2.28eXzVeOdu64sb4oZNgH2g__.3600.1295503200-6454&amp;width=' + box.width + '&amp;xid=' + response.categories[i] + '"></iframe>' : '',
 				layout: "fit",
+				html: '<iframe src="http://facebook.com/plugins/livefeed.php?api_key=137798392964646&sdk=joey&always_post_to_friends=false&height=' + box.height + '&width=' + box.width + '&xid=\'' + response.categories[i] + '\'" style="height:' + box.height + 'px; width: ' + box.width + 'px">',
 			});
 		}
 	});
