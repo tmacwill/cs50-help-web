@@ -16,6 +16,18 @@ Ext.onReady(function() {
 		},
 	});
 
+	Ext.create('Ext.data.Store', {
+		storeId: 'category_store',
+		fields: ['category'],
+		proxy: {
+			type: 'memory',
+			reader:  {
+				type: 'json',
+				root: 'categories',
+			},
+		},
+	});
+
 	var viewport = Ext.create('Ext.container.Viewport',  {
 		id: 'viewport',
 		title: 'CS50 Help',
@@ -46,11 +58,19 @@ Ext.onReady(function() {
 				id: 'question-text',
 				allowBlank: false,
 				emptyText: "Question text",
+            }, {
+                xtype: 'combobox',
+                fieldLabel: 'Category',
+				store: Ext.data.StoreManager.lookup('category_store'),
+                queryMode: 'local',
+                valueField: 'category',
+                displayField: 'category',
 			}, {
 				xtype: 'checkbox',
 				boxLabel: 'Show your question in the queue',
 				name: 'question-show',
 				id: 'question-show',
+				checked: true,
 			}],
 
 			buttonAlign: 'center',
@@ -161,16 +181,23 @@ function enable_form() {
  */
 function get_categories() {
 	$.getJSON(site_url + 'spreadsheets/categories', function(response) {
+        // iterate over tab box
 		var tabs = Ext.getCmp('tabs');
 		var box = tabs.getBox();
 		for (i in response.categories) {
+            console.log(response.categories[i]);
+            // add tab with unique XID for each category
 			var tab = tabs.add({
-				title: response.categories[i],
-				id: 'tab-' + response.categories[i],
+				title: response.categories[i].category,
+				id: 'tab-' + response.categories[i].category,
 				layout: "fit",
 				html: '<iframe src="http://facebook.com/plugins/livefeed.php?api_key=137798392964646&sdk=joey&always_post_to_friends=false&height=' + box.height + '&width=' + box.width + '&xid=\'' + response.categories[i] + '\'" style="height:' + box.height + 'px; width: ' + box.width + 'px">',
 			});
 		}
+        
+        // load categories into data store
+        var store = Ext.data.StoreManager.lookup('category_store');
+        store.loadData(response.categories);
 	});
 }
 

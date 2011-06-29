@@ -38,7 +38,7 @@ class Spreadsheet extends CI_Model {
 		$return_array = array();
 		foreach ($spreadsheet as $row_csv) {
 			$row = explode(",", $row_csv);
-			$return_array[] = $row[$column];
+			$return_array[] = array('category' => $row[$column]);
 		}
 
 		// remote date from list of categories
