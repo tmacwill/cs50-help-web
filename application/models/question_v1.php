@@ -1,6 +1,6 @@
 <?php
 
-class Question extends CI_Model {
+class Question_v1 extends CI_Model {
 	// state variables, used by controller as well
 	const STATE_HAND_UP = 0;
 	const STATE_DISPATCHED = 1;

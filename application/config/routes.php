@@ -38,8 +38,13 @@
 |
 */
 
+$CURRENT_VERSION = 1;
+
 $route['default_controller'] = "questions";
 $route['404_override'] = '';
+
+$route['api/v(\d+)/(\w+)/(.*)'] = "$2_v$1/$3";
+$route['(\w+)/(.*)'] = "$1_v{$CURRENT_VERSION}/$2";
 
 
 /* End of file routes.php */

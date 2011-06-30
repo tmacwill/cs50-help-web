@@ -2,7 +2,7 @@
 
 require_once(dirname(__FILE__) . '/cs50/CS50.php');
 
-class Auth extends CI_Controller {
+class Auth_v1 extends CI_Controller {
 	const STATE = '/srv/www/tommymacwilliam.com/public_html/cs50help/application/cs50id_state';
 	const TRUST_ROOT = 'http://tommymacwilliam.com/cs50help/auth/';
 	const RETURN_TO = 'http://tommymacwilliam.com/cs50help/auth/return_to';

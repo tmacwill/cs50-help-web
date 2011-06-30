@@ -1,6 +1,6 @@
 <?php
 
-class Questions extends CI_Controller {
+class Questions_v1 extends CI_Controller {
 	const FILTER = 'htmlspecialchars';
 	
 	// javascript files to load in view
@@ -18,7 +18,7 @@ class Questions extends CI_Controller {
 
 	public function __construct() {
 		parent::__construct();
-		$this->load->model('Question');
+		$this->load->model('Question_v1');
 
 		// load assets
 		$this->carabiner->js($this->js_assets);
@@ -27,19 +27,19 @@ class Questions extends CI_Controller {
 		// form validator should escape all input
 		$rules = array(
 				array(
-					'field' => Question::NAME_COLUMN,
+					'field' => Question_v1::NAME_COLUMN,
 					'rules' => self::FILTER
 				),
 				array(
-					'field' => Question::QUESTION_COLUMN,
+					'field' => Question_v1::QUESTION_COLUMN,
 					'rules' => self::FILTER
 				),
 				array(
-					'field' => Question::CATEGORY_COLUMN,
+					'field' => Question_v1::CATEGORY_COLUMN,
 					'rules' => self::FILTER
 				),
 				array(
-					'field' => Question::TF_COLUMN,
+					'field' => Question_v1::TF_COLUMN,
 					'rules' => self::FILTER
 				)
 		);
@@ -65,7 +65,7 @@ class Questions extends CI_Controller {
 	 *
 	 */
 	public function add() {
-		$this->Question->add($this->input->post());
+		$this->Question_v1->add($this->input->post());
 		echo json_encode(array(
 			'success' => true,
 			'id' => $this->db->insert_id()
@@ -85,7 +85,7 @@ class Questions extends CI_Controller {
 				exit;
 			}
 			else
-				redirect('auth/login');
+				redirect('auth_v1/login');
 		}
 		session_write_close();
 	}
@@ -95,7 +95,7 @@ class Questions extends CI_Controller {
 	 *
 	 */
 	public function closed() {
-		$this->Question->set_state($this->input->post('id'), Question::STATE_CLOSED);
+		$this->Question_v1->set_state($this->input->post('id'), Question_v1::STATE_CLOSED);
 		echo json_encode(array('success' => true));
 	}
 
@@ -104,7 +104,7 @@ class Questions extends CI_Controller {
 	 *
 	 */
 	public function dispatch() {
-		$this->Question->dispatch(explode(',', $this->input->post('ids')), $this->input->post('tf'));
+		$this->Question_v1->dispatch(explode(',', $this->input->post('ids')), $this->input->post('tf'));
 		echo json_encode(array('success' => true));
 	}
 
@@ -113,7 +113,7 @@ class Questions extends CI_Controller {
 	 *
 	 */
 	public function dispatched($force = false) {
-		$dispatched = $this->Question->get_dispatched($force);
+		$dispatched = $this->Question_v1->get_dispatched($force);
 		if ($dispatched) {
 			$dispatched['success'] = true;
 			echo json_encode($dispatched);
@@ -125,7 +125,7 @@ class Questions extends CI_Controller {
 	 *
 	 */
 	public function hand_down() {
-		$this->Question->set_state($this->input->post('id'), Question::STATE_HAND_DOWN);
+		$this->Question_v1->set_state($this->input->post('id'), Question_v1::STATE_HAND_DOWN);
 		echo json_encode(array('success' => true));
 	}
 
@@ -144,7 +144,7 @@ class Questions extends CI_Controller {
 	 *
 	 */
 	public function queue($force= false) {
-		$queue = $this->Question->get_queue($force);
+		$queue = $this->Question_v1->get_queue($force);
 		if ($queue) {
 			$queue['success'] = true;
 			echo json_encode($queue);

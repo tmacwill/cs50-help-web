@@ -1,6 +1,6 @@
 <?php
 
-class Spreadsheet extends CI_Model {
+class Spreadsheet_v1 extends CI_Model {
 	const CATEGORIES_URL = 'https://spreadsheets.google.com/spreadsheet/pub?hl=en_US&hl=en_US&key=0Ah3bwLWjJUiPdDg1OEhGNmZORTlNcHVRUi1XdXRjWXc&single=true&gid=1&output=csv';
 	const SCHEDULE_URL = 'https://www.google.com/calendar/feeds/djsch5ddcameaq4637tjio45r4%40group.calendar.google.com/public/basic';
 	const STAFF_URL = 'https://spreadsheets.google.com/spreadsheet/pub?hl=en_US&hl=en_US&key=0Ah3bwLWjJUiPdDg1OEhGNmZORTlNcHVRUi1XdXRjWXc&single=true&gid=0&output=csv';

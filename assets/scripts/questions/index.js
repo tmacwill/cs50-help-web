@@ -129,7 +129,7 @@ Ext.onReady(function() {
  *
  */
 function add_question() {
-	var url = site_url + 'questions/add';
+	var url = site_url + 'api/v1/questions/add';
 
 	var data = {
 		student_id: identity,
@@ -180,7 +180,7 @@ function enable_form() {
  *
  */
 function get_categories() {
-	$.getJSON(site_url + 'spreadsheets/categories', function(response) {
+	$.getJSON(site_url + 'api/v1/spreadsheets/categories', function(response) {
         // iterate over tab box
 		var tabs = Ext.getCmp('tabs');
 		var box = tabs.getBox();
@@ -207,7 +207,7 @@ function get_categories() {
  *
  */
 function get_dispatched(initial) {
-	var url = site_url + 'questions/dispatched';
+	var url = site_url + 'api/v1/questions/dispatched';
 	// force immediate response if called for the first time
 	if (initial)
 		url += '/true';
@@ -241,7 +241,7 @@ function get_dispatched(initial) {
  *
  */
 function get_queue(initial) {
-	var url = site_url + 'questions/queue';
+	var url = site_url + 'api/v1/questions/queue';
 	// force an immediate response if called for the first time
 	if (initial)
 		url += '/true';
@@ -295,7 +295,7 @@ function handle_question_submit() {
  *
  */
 function put_hand_down() {
-	var url = site_url + 'questions/hand_down';
+	var url = site_url + 'api/v1/questions/hand_down';
 	var data = {
 		id: question_id
 	};
