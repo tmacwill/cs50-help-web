@@ -58,6 +58,9 @@ class Questions_v1 extends CI_Controller {
 		if (isset($_SESSION['user']['fullname']))
 			$this->template->set('name', $_SESSION['user']['fullname']);
 		session_write_close();
+
+		// send course url to view
+		$this->template->set('course', $this->uri->segment(1));
 	}
 
 	/**

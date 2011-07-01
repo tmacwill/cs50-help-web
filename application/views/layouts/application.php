@@ -2,7 +2,7 @@
 <html>
 <head>
     <title>CS50 Help</title>
-	<script> var site_url = "<?= site_url(); ?>"; </script>
+	<script> var site_url = "<?php echo site_url(); if (isset($course)) echo $course . '/'; ?>"; </script>
 	<?php $this->carabiner->display(); ?>
 </head>
 

@@ -12,9 +12,12 @@ class Auth_v1 extends CI_Controller {
 		if (isset($_SESSION['user']))
 			redirect('questions/index');
 		else {
+			// construct return url, which includes data format and course url
 			$return_to = self::RETURN_TO;
+			$return_to .= '?course=' . $this->uri->segment(1);
 			if ($_REQUEST['format'])
-				$return_to .= '?format=' . $_REQUEST['format'];
+				$return_to .= '&format=' . $_REQUEST['format'];
+
 			redirect(CS50::getLoginUrl(self::STATE, self::TRUST_ROOT, $return_to));
 		}
 	}
@@ -47,7 +50,7 @@ class Auth_v1 extends CI_Controller {
 			header('Location: cs50help://user/' . $identity . '/' . $name . '/' . session_id());
 
 		else
-			redirect('questions/index');
+			redirect($_REQUEST['course'] . '/questions/index');
 	}
 }
 

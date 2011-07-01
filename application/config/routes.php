@@ -43,9 +43,27 @@ $CURRENT_VERSION = 1;
 $route['default_controller'] = "questions";
 $route['404_override'] = '';
 
-$route['api/v(\d+)/(\w+)/(.*)'] = "$2_v$1/$3";
-$route['(\w+)/(.*)'] = "$1_v{$CURRENT_VERSION}/$2";
+/**
+ * CS50 ID return_to, cannot have course as 1st URI segment because of openid restrictions
+ *
+ */
+$route['auth/return_to'] = "auth_v{$CURRENT_VERSION}/return_to";
 
+/**
+ * API call 
+ * route   course/api/v#/controller/method/parameters 
+ * becomes controller_v#/action/method/course/parameters
+ *
+ */
+$route['(\w+)/api/v(\d+)/(\w+)/(\w+)/?(.*)'] = "$3_v$2/$4/$1/$5";
+
+/**
+ * Application call always uses current version of API
+ * route   course/controller/method/parameters
+ * becomes controller_vn/action/method/course/parameters
+ *
+ */
+$route['(\w+)/(\w+)/(\w+)/?(.*)'] = "$2_v{$CURRENT_VERSION}/$3/$1/$4";
 
 /* End of file routes.php */
 /* Location: ./application/config/routes.php */

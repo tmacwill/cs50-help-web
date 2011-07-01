@@ -12,6 +12,7 @@ class Spreadsheet_v1 extends CI_Model {
 
 	public function __construct() {
 		parent::__construct();
+		$this->load->model('Course_v1');
 	}
 
 	public function get_categories() {
@@ -19,7 +20,8 @@ class Spreadsheet_v1 extends CI_Model {
 		$date = date('n/j/Y');
 
 		// get CSV of published spreadsheet
-		$curl = curl_init(self::CATEGORIES_URL);
+		$url = $this->Course_v1->get_categories_url($this->uri->segment(1));
+		$curl = curl_init($url);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		$spreadsheet = explode("\n", curl_exec($curl));
 		curl_close($curl);
@@ -55,7 +57,8 @@ class Spreadsheet_v1 extends CI_Model {
 		$staff = $this->get_staff();
 
 		// get XML representation of GCal
-		$curl = curl_init(self::SCHEDULE_URL);
+		$url = $this->Course_v1->get_schedule_url($this->uri->segment(1));
+		$curl = curl_init($url);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		$schedule_xml = new SimpleXMLElement(curl_exec($curl));
 		curl_close($curl);
@@ -86,7 +89,8 @@ class Spreadsheet_v1 extends CI_Model {
 
 	public function get_staff() {
 		// get CSV of published spreadsheet
-		$curl = curl_init(self::STAFF_URL);
+		$url = $this->Course_v1->get_staff_url($this->uri->segment(1));
+		$curl = curl_init($url);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		$spreadsheet = explode("\n", curl_exec($curl));
 		curl_close($curl);
