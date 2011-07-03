@@ -1,10 +1,6 @@
 <?php
 
 class Spreadsheet_v1 extends CI_Model {
-	const CATEGORIES_URL = 'https://spreadsheets.google.com/spreadsheet/pub?hl=en_US&hl=en_US&key=0Ah3bwLWjJUiPdDg1OEhGNmZORTlNcHVRUi1XdXRjWXc&single=true&gid=1&output=csv';
-	const SCHEDULE_URL = 'https://www.google.com/calendar/feeds/djsch5ddcameaq4637tjio45r4%40group.calendar.google.com/public/basic';
-	const STAFF_URL = 'https://spreadsheets.google.com/spreadsheet/pub?hl=en_US&hl=en_US&key=0Ah3bwLWjJUiPdDg1OEhGNmZORTlNcHVRUi1XdXRjWXc&single=true&gid=0&output=csv';
-
 	const USERNAME_COLUMN = 'username';
 	const NAME_COLUMN = 'name';
 	const PHONE_COLUMN = 'phone';
@@ -15,12 +11,12 @@ class Spreadsheet_v1 extends CI_Model {
 		$this->load->model('Course_v1');
 	}
 
-	public function get_categories() {
+	public function get_categories($course) {
 		// get current date as month/day/year, matching GDoc's format
 		$date = date('n/j/Y');
 
 		// get CSV of published spreadsheet
-		$url = $this->Course_v1->get_categories_url($this->uri->segment(1));
+		$url = $this->Course_v1->get_categories_url($course);
 		$curl = curl_init($url);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		$spreadsheet = explode("\n", curl_exec($curl));
@@ -52,12 +48,12 @@ class Spreadsheet_v1 extends CI_Model {
 	 * Get the staff on duty today based on a GCal
 	 *
 	 */
-	public function get_schedule() {
+	public function get_schedule($course) {
 		// get all TFs/CAs
 		$staff = $this->get_staff();
 
 		// get XML representation of GCal
-		$url = $this->Course_v1->get_schedule_url($this->uri->segment(1));
+		$url = $this->Course_v1->get_schedule_url($course);
 		$curl = curl_init($url);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		$schedule_xml = new SimpleXMLElement(curl_exec($curl));
@@ -87,9 +83,9 @@ class Spreadsheet_v1 extends CI_Model {
 		return array('schedule' => $staff['staff']);
 	}
 
-	public function get_staff() {
+	public function get_staff($course) {
 		// get CSV of published spreadsheet
-		$url = $this->Course_v1->get_staff_url($this->uri->segment(1));
+		$url = $this->Course_v1->get_staff_url($course);
 		$curl = curl_init($url);
 		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
 		$spreadsheet = explode("\n", curl_exec($curl));

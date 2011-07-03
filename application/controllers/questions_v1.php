@@ -10,6 +10,7 @@ class Questions_v1 extends CI_Controller {
 		array('ext/bootstrap.js'),
 	);
 
+	// css files to load in view
 	private $css_assets = array(
 		array('resources/css/ext-all.css'),
 		array('resources/css/ext-all-gray.css'),
@@ -51,54 +52,75 @@ class Questions_v1 extends CI_Controller {
 		// make sure user is authenticated if need be
 		$this->authenticate();
 
-		// send user info to view
+		// send course url to view
+		$course = $this->uri->segment(1);
+		$this->template->set('course', $course);
+
+		// get user information from session
 		session_start();
-		if (isset($_SESSION['user']['identity']))
-			$this->template->set('identity', substr($_SESSION['user']['identity'], strlen('https://id.cs50.net/')));
-		if (isset($_SESSION['user']['fullname']))
-			$this->template->set('name', $_SESSION['user']['fullname']);
+		$user = $_SESSION[$course . '_user'];
 		session_write_close();
 
-		// send course url to view
-		$this->template->set('course', $this->uri->segment(1));
+		// send user information to view
+		if (isset($user['identity']))
+			$this->template->set('identity', substr($user['identity'], strlen('https://id.cs50.net/')));
+		if (isset($user['name']))
+			$this->template->set('name', $user['name']);
+
 	}
 
 	/**
 	 * Add a new question
 	 *
 	 */
-	public function add() {
-		$this->Question_v1->add($this->input->post());
+	public function add($course) {
+		$this->Question_v1->add($this->input->post(), $course);
 		echo json_encode(array(
 			'success' => true,
 			'id' => $this->db->insert_id()
 		));
 	}
 
+	// @TODO: make this a static method in the auth controller
 	public function authenticate() {
-		// array of restricted URLs
-		$restricted = array('', 'closed', 'dispatch', 'dispatched', 'hand_down', 'index', 'queue');
+		// urls requiring user to be logged in
+		$login_restricted = array('', 'add', 'closed', 'dispatch', 'dispatched', 'hand_down', 'index', 'queue');
+		// urls restricted to current student and staff
+		$current_login_restricted = array('add', 'closed', 'hand_down');
+		// urls restricted only to staff
+		$staff_restricted = array('dispatch');
 
-		// redirect user if trying to access a restricted action
-		$action = $this->uri->segment(2);
+		// get user and action information
+		$course = $this->uri->segment(1);
+		$action = $this->uri->segment(3);
 		session_start();
-		if (!isset($_SESSION['user']) && in_array($action, $restricted)) {
-			if ($_REQUEST['format'] == 'json') {
-				echo json_encode(array('success' => false));
-				exit;
-			}
-			else
-				redirect('auth_v1/login');
-		}
+		$user = isset($_SESSION[$course . '_user']) ? $_SESSION[$course . '_user'] : false;
+		$staff = isset($_SESSION[$course . '_staff']) ? $_SESSION[$course . '_staff'] : false;
 		session_write_close();
+		
+		// permit staff to take any action
+		if ($staff === false) {
+			// user is not logged in or is trying to take action on behalf of another user
+			if (($user === false && in_array($action, $login_restricted)) ||
+					($user['identity'] != $this->input->post('student_id') && in_array($action, $current_login_restricted))) {
+				// @TODO: handle request denial better
+				if ($_REQUEST['format'] == 'json') {
+					echo json_encode(array('success' => false));
+					exit;
+				}
+				else {
+					redirect($course . '/auth/login');
+				}
+			}
+		}
 	}
 
 	/**
 	 * Student closed their window
 	 *
 	 */
-	public function closed() {
-		$this->Question_v1->set_state($this->input->post('id'), Question_v1::STATE_CLOSED);
+	public function closed($course) {
+		$this->Question_v1->set_state($this->input->post('id'), Question_v1::STATE_CLOSED, $course);
 		echo json_encode(array('success' => true));
 	}
 
@@ -106,8 +128,8 @@ class Questions_v1 extends CI_Controller {
 	 * Dispatch a student to a TF
 	 *
 	 */
-	public function dispatch() {
-		$this->Question_v1->dispatch(explode(',', $this->input->post('ids')), $this->input->post('tf'));
+	public function dispatch($course) {
+		$this->Question_v1->dispatch(explode(',', $this->input->post('ids')), $this->input->post('tf'), $course);
 		echo json_encode(array('success' => true));
 	}
 
@@ -115,8 +137,8 @@ class Questions_v1 extends CI_Controller {
 	 * Get a list of dispatched students
 	 *
 	 */
-	public function dispatched($force = false) {
-		$dispatched = $this->Question_v1->get_dispatched($force);
+	public function dispatched($course, $force = false) {
+		$dispatched = $this->Question_v1->get_dispatched($course, $force);
 		if ($dispatched) {
 			$dispatched['success'] = true;
 			echo json_encode($dispatched);
@@ -127,8 +149,8 @@ class Questions_v1 extends CI_Controller {
 	 * Student put their hand down
 	 *
 	 */
-	public function hand_down() {
-		$this->Question_v1->set_state($this->input->post('id'), Question_v1::STATE_HAND_DOWN);
+	public function hand_down($course) {
+		$this->Question_v1->set_state($this->input->post('id'), Question_v1::STATE_HAND_DOWN, $course);
 		echo json_encode(array('success' => true));
 	}
 
@@ -137,7 +159,6 @@ class Questions_v1 extends CI_Controller {
 	 *
 	 */
 	public function index() {
-		//$this->carabiner->js('main.js');
 		$this->carabiner->js('questions/index.js');
 		$this->template->render();
 	}
@@ -146,8 +167,8 @@ class Questions_v1 extends CI_Controller {
 	 * Get the queue of students
 	 *
 	 */
-	public function queue($force= false) {
-		$queue = $this->Question_v1->get_queue($force);
+	public function queue($course, $force = false) {
+		$queue = $this->Question_v1->get_queue($course, $force);
 		if ($queue) {
 			$queue['success'] = true;
 			echo json_encode($queue);

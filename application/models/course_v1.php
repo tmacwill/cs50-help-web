@@ -10,12 +10,12 @@ class Course_v1 extends CI_Model {
 	}
 
 	public function get_schedule_url($url) {
-		$row = $this->db->get_where(self::TABLE, array(self::URL_COLUMN => $url))->row();
+		$row = $this->db->get_where(self::TABLE, array(self::URL_COLUMN => $url))->row_array();
 		return $row['schedule_url'];
 	}
 
 	public function get_staff_url($url) {
-		$row = $this->db->get_where(self::TABLE, array(self::URL_COLUMN => $url))->row();
+		$row = $this->db->get_where(self::TABLE, array(self::URL_COLUMN => $url))->row_array();
 		return $row['staff_url'];
 	}
 }

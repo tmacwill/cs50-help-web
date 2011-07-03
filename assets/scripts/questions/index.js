@@ -11,7 +11,7 @@ Ext.onReady(function() {
 			type: 'memory',
 			reader:  {
 				type: 'json',
-				root: 'queue',
+				root: course + '_queue',
 			},
 		},
 	});
@@ -185,7 +185,6 @@ function get_categories() {
 		var tabs = Ext.getCmp('tabs');
 		var box = tabs.getBox();
 		for (i in response.categories) {
-            console.log(response.categories[i]);
             // add tab with unique XID for each category
 			var tab = tabs.add({
 				title: response.categories[i].category,
@@ -216,7 +215,7 @@ function get_dispatched(initial) {
 		if (response.success) {
 			if (response.changed) {
 				// see if our question has been dispatched
-				var dispatch = response.dispatched.filter(function(element, index, array) { return element.id == question_id });
+				var dispatch = response[course + '_dispatched'].filter(function(element, index, array) { return element.id == question_id });
 				// our question is considered dispatched until we ask another, so don't show multiple notifications for one dispatch
 				if (dispatch.length > 0) {
 					alert('WEE WOO WEE WOO YOUR TURN. GO SEE ' + dispatch[0].tf);
@@ -252,12 +251,14 @@ function get_queue(initial) {
 			if (response.changed) {
 				// load queue into data store
 				var store = Ext.data.StoreManager.lookup('queue_store');
-				store.loadData(response.queue);
+				store.loadData(response[course + '_queue']);
 				
 				// get our question from the store if it exists
 				question_index = store.findExact('student_id', identity);
-				if (question_index > -1)
+				if (question_index > -1) {
 					question_id = store.getAt(question_index).data.id;
+					hand_up = true;
+				}
 			}
 
 			if (initial) {
@@ -297,7 +298,8 @@ function handle_question_submit() {
 function put_hand_down() {
 	var url = site_url + 'api/v1/questions/hand_down';
 	var data = {
-		id: question_id
+		id: question_id,
+		student_id: identity,
 	};
 
 	$.post(url, data, function(response) {
