@@ -152,6 +152,17 @@ class Question_v1 extends CI_Model {
 		return $queue;
 	}
 
+	/** 
+	 * User has logged in, so re-activate any closed window questions
+	 *
+	 */
+	public function login($student_id, $course) {
+		$this->db->set(self::STATE_COLUMN, self::STATE_HAND_UP)->
+			where(array(self::STUDENT_ID_COLUMN => $student_id, self::STATE_COLUMN => self::STATE_CLOSED,
+				'DATE(' . self::TIMESTAMP_COLUMN . ')' => date('Y-m-d')));
+		$this->db->update(self::TABLE);
+	}
+
 	/**
 	 * Use long polling to get all questions with the given state
 	 * @param $memcache_key [String] Key used to store list in cache

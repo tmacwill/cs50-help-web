@@ -115,9 +115,14 @@ Ext.onReady(function() {
 		return false;
 	});
 
+	$(window).unload(function() {
+		closed();
+	});
+
 	// timeout prevents eternally loading favicon 
 	setTimeout(function() {
 		get_categories();
+		login();
 		// get_queue will continue to call itself in a loop and call get_dispatch for the first time
 		get_queue(true);
 	}, 100);
@@ -150,6 +155,23 @@ function add_question() {
 		else
 			show_error();
 	});
+}
+
+/**
+ * Student has closed the window
+ *
+ */
+function closed() {
+	// only post if student has an active question
+	if (question_id) {
+		var url = site_url + 'api/v1/questions/closed';
+		var data = {
+			id: question_id,
+		};
+
+		$.post(url, data, function(response) {
+		});
+	}
 }
 
 /**
@@ -289,6 +311,20 @@ function handle_question_submit() {
 		put_hand_down();
 	else
 		add_question();
+}
+
+/**
+ * Mark closed questions as hand up
+ *
+ */
+function login() {
+	var url = site_url + 'api/v1/questions/login';
+	var data = {
+		student_id: identity,
+	};
+
+	$.post(url, data, function(response) {
+	});
 }
 
 /**

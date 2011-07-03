@@ -164,6 +164,15 @@ class Questions_v1 extends CI_Controller {
 	}
 
 	/**
+	 * Student has just logged in
+	 *
+	 */
+	public function login($course) {
+		$this->Question_v1->login($this->input->post('student_id'), $course);
+		echo json_encode(array('success' => true));
+	}
+
+	/**
 	 * Get the queue of students
 	 *
 	 */
