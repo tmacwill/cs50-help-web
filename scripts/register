@@ -1,0 +1,60 @@
+#!/usr/bin/php
+
+<?php
+
+$spreadsheet_url = 'https://spreadsheets.google.com/spreadsheet/pub?hl=en_US&hl=en_US&key=0Ah3bwLWjJUiPdHlfaGl5cC1lVTFfUlFKeVZ1a1BIYUE&output=csv';
+$name_index = 1;
+$instructor_index = 2;
+$email_index = 3;
+$url_index = 4;
+$staff_index = 5;
+$categories_index = 6;
+$schedule_index = 7;
+
+// connect to database
+mysql_connect('localhost', 'cs50help', 'cs50help');
+mysql_select_db('cs50help');
+
+// get CSV of published spreadsheet
+$curl = curl_init($spreadsheet_url);
+curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+$spreadsheet = explode("\n", curl_exec($curl));
+curl_close($curl);
+
+// remove title row from csv
+array_shift($spreadsheet);
+
+// construct list of all courses from database
+$result = mysql_query('SELECT * FROM courses');
+$courses = array();
+while ($course = mysql_fetch_assoc($result)) 
+	$courses[] = $course;
+
+// check if each course is found in database and insert if not
+$changed = false;
+$insert_query = 'INSERT INTO courses (url, name, instructor, email, staff_url, categories_url, schedule_url) VALUES ';
+foreach ($spreadsheet as $row_csv) {
+	$row = explode(',', $row_csv);
+	$found = false;
+	foreach ($courses as $course) {
+		var_dump($course['url']);
+		// course already present in database
+		if ($course['url'] == $row[$url_index]) {
+			$found = true;
+			break;
+		}
+	}
+	
+	// course not in database, so insert
+	if (!$found) {
+		$changed = true;
+		$insert_query .= "('{$row[$url_index]}', '{$row[$name_index]}', '{$row[$instructor_index]}', '{$row[$email_index]}', " . 
+			"'{$row[$staff_index]}', '{$row[$categories_index]}', '{$row[$schedule_index]}')," ;
+	}
+}
+
+// only run query if the CSV has changed
+if ($changed) 
+	mysql_query(rtrim($insert_query, ','));
+
+?>
