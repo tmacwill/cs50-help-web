@@ -42,6 +42,9 @@ class Question_v1 extends CI_Model {
 	 *
 	 */
 	public function add($data, $course) {
+		if (!isset($data[self::STUDENT_ID_COLUMN]) || !isset($data[self::QUESTION_COLUMN]) || !isset($data[self::CATEGORY_COLUMN]))
+			return false;
+
 		// check if student already has his/her hand up
 		$student = $this->db->get_where(self::TABLE, array(self::COURSE_COLUMN => $course, 
 					self::STUDENT_ID_COLUMN => $data[self::STUDENT_ID_COLUMN], self::STATE_COLUMN => self::STATE_HAND_UP))->row();
@@ -50,9 +53,12 @@ class Question_v1 extends CI_Model {
 		if (!$student) {
 			$data[self::COURSE_COLUMN] = $course;
 			$this->db->insert(self::TABLE, $data);
-			$this->memcache->delete($this->get_key_queue($data[self::COURSE_COLUMN]));
-			$this->memcache->set($this->get_key_queue_update($data[self::COURSE_COLUMN]), (string)time());
+			$this->memcache->delete($this->get_key_queue($course);
+			$this->memcache->set($this->get_key_queue_update($course), (string)time());
+			return true;
 		}
+		else
+			return false;
 	}
 
 	/**
@@ -64,6 +70,9 @@ class Question_v1 extends CI_Model {
 	 *
 	 */
 	public function dispatch($ids, $tf, $course) {
+		if (empty($ids) || empty($tf)) 
+			return false;
+
 		// get student ids corresponding to question ids
 		$student_id_results = $this->db->select(self::STUDENT_ID_COLUMN)->where_in(self::ID_COLUMN, $ids)->
 			get(self::TABLE)->result_array();
@@ -74,9 +83,11 @@ class Question_v1 extends CI_Model {
 			$student_ids[] = $student_id[self::STUDENT_ID_COLUMN];
 
 		// mark all students' previous questions as completed
-		$this->db->set(array(self::STATE_COLUMN => self::STATE_COMPLETED))->where_in(self::STUDENT_ID_COLUMN, $student_ids)->
-			where(array(self::STATE_COLUMN => self::STATE_HAND_UP, self::COURSE_COLUMN => $course));
-		$this->db->update(self::TABLE);
+		if (!empty($student_ids)) {
+			$this->db->set(array(self::STATE_COLUMN => self::STATE_COMPLETED))->where_in(self::STUDENT_ID_COLUMN, $student_ids)->
+				where(array(self::STATE_COLUMN => self::STATE_HAND_UP, self::COURSE_COLUMN => $course));
+			$this->db->update(self::TABLE);
+		}
 
 		// mark questions as dispatched
 		$this->db->set(array(self::TF_COLUMN => $tf, self::STATE_COLUMN => self::STATE_DISPATCHED))->where_in(self::ID_COLUMN, $ids);
@@ -87,6 +98,8 @@ class Question_v1 extends CI_Model {
 		$this->memcache->delete($this->get_key_dispatched($course));
 		$this->memcache->set($this->get_key_queue_update($course), (string)time());
 		$this->memcache->set($this->get_key_dispatched_update($course), (string)time());
+
+		return true;
 	}
 
 	/**
@@ -231,9 +244,14 @@ class Question_v1 extends CI_Model {
 	 *
 	 */
 	public function set_state($id, $state, $course) {
+		if (empty($id) || empty($state))
+			return false;
+
 		$this->db->set(self::STATE_COLUMN, $state)->where(array(self::ID_COLUMN => $id, self::COURSE_COLUMN => $course));
 		$this->db->update(self::TABLE);
 		$this->memcache->delete($this->get_key_queue($course));
+
+		return true;
 	}
 }
 

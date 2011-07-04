@@ -18,6 +18,11 @@ class Course_v1 extends CI_Model {
 		$row = $this->db->get_where(self::TABLE, array(self::URL_COLUMN => $url))->row_array();
 		return $row['staff_url'];
 	}
+
+	public function get_students_url($url) {
+		$row = $this->db->get_where(self::TABLE, array(self::URL_COLUMN => $url))->row_array();
+		return $row['students_url'];
+	}
 }
 
 ?>

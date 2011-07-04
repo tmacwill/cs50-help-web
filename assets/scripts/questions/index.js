@@ -119,6 +119,9 @@ Ext.onReady(function() {
 		closed();
 	});
 
+	window.onunload = function() { closed(); };
+	window.onbeforeunload = function() { closed(); };
+
 	// timeout prevents eternally loading favicon 
 	setTimeout(function() {
 		get_categories();

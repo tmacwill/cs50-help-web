@@ -122,6 +122,25 @@ class Spreadsheet_v1 extends CI_Model {
 
 		return array('staff' => $return_array);
 	}
+
+	public function get_students($course) {
+		// get CSV of published spreadsheet
+		$url = $this->Course_v1->get_students_url($course);
+		$curl = curl_init($url);
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+		$spreadsheet = explode("\n", curl_exec($curl));
+		curl_close($curl);
+
+		// iterate over rows, skipping first row
+		$return_array = array();
+		array_shift($spreadsheet);
+		foreach ($spreadsheet as $row_csv) {
+			$row = explode(",", $row_csv);
+			$return_array[] = trim($row[0]);
+		}
+
+		return array('students' => $return_array);
+	}
 }
 
 ?>
