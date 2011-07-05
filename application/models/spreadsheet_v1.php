@@ -50,7 +50,7 @@ class Spreadsheet_v1 extends CI_Model {
 	 */
 	public function get_schedule($course) {
 		// get all TFs/CAs
-		$staff = $this->get_staff();
+		$staff = $this->get_staff($course);
 
 		// get XML representation of GCal
 		$url = $this->Course_v1->get_schedule_url($course);
