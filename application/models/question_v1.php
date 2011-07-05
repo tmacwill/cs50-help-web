@@ -53,7 +53,7 @@ class Question_v1 extends CI_Model {
 		if (!$student) {
 			$data[self::COURSE_COLUMN] = $course;
 			$this->db->insert(self::TABLE, $data);
-			$this->memcache->delete($this->get_key_queue($course);
+			$this->memcache->delete($this->get_key_queue($course));
 			$this->memcache->set($this->get_key_queue_update($course), (string)time());
 			return true;
 		}

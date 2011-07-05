@@ -33,62 +33,65 @@ Ext.onReady(function() {
 		title: 'CS50 Help',
 		renderTo: document.body,
 		layout: {
-			type: 'vbox',
+			type: 'hbox',
 			align: 'stretch',
 		},
+
 		items: [{
-			xtype: 'form',
-			height: 200,
-			id: 'question-form',
-			url: site_url + 'questions/dispatch',
-			layout: { 
+			xtype: 'panel',
+			flex: 1,
+			layout: {
 				type: 'vbox',
 				align: 'stretch',
 			},
 
-			frame: true,
-			title: 'Got a question?',
-			defaults: {
-				anchor: '100%'
-			},
-		
 			items: [{
-				xtype: 'textarea',
-				name: 'question-text',
-				id: 'question-text',
-				allowBlank: false,
-				emptyText: "Question text",
-            }, {
-                xtype: 'combobox',
-                fieldLabel: 'Category',
-				store: Ext.data.StoreManager.lookup('category_store'),
-                queryMode: 'local',
-                valueField: 'category',
-                displayField: 'category',
-			}, {
-				xtype: 'checkbox',
-				boxLabel: 'Show your question in the queue',
-				name: 'question-show',
-				id: 'question-show',
-				checked: true,
-			}],
+				xtype: 'form',
+				height: 200,
+				id: 'question-form',
+				url: site_url + 'questions/dispatch',
+				layout: { 
+					type: 'vbox',
+					align: 'stretch',
+				},
 
-			buttonAlign: 'center',
-			buttons: [{
-				text: 'Ask',
-				id: 'question-submit',
-				handler: function() {
-					handle_question_submit();
-				}
-			}]
-		}, { 
-			xtype: 'panel',
-			flex: 1,
-			layout: {
-				type: 'hbox',
-				align: 'stretch',
-			},
-			items: [{
+				frame: true,
+				title: 'Ask a Question',
+				defaults: {
+					anchor: '100%'
+				},
+			
+				items: [{
+					xtype: 'textarea',
+					name: 'question-text',
+					id: 'question-text',
+					allowBlank: false,
+					emptyText: "Question text",
+				}, {
+					xtype: 'combobox',
+					fieldLabel: 'Category',
+					store: Ext.data.StoreManager.lookup('category_store'),
+					queryMode: 'local',
+					valueField: 'category',
+					displayField: 'category',
+					editable: false,
+				}, {
+					xtype: 'checkbox',
+					boxLabel: 'Show your question in the queue',
+					name: 'question-show',
+					id: 'question-show',
+					checked: true,
+				}],
+
+				buttonAlign: 'center',
+				buttons: [{
+					text: 'Ask',
+					id: 'question-submit',
+					handler: function() {
+						handle_question_submit();
+					}
+				}], 
+			}, {
 				xtype: 'gridpanel',
 				flex: 1,
 				id: 'queueContainer',
@@ -99,7 +102,15 @@ Ext.onReady(function() {
 					{ header: 'Name', dataIndex: 'name', flex: 2 },
 					{ header: 'Question', dataIndex: 'question', flex: 5 },
 				],
-			}, {
+			}]
+		}, { 
+			xtype: 'panel',
+			flex: 1,
+			layout: {
+				type: 'hbox',
+				align: 'stretch',
+			},
+			items: [{
 				xtype: 'tabpanel',
 				flex: 1,
 				id: 'tabs',
@@ -115,10 +126,8 @@ Ext.onReady(function() {
 		return false;
 	});
 
-	$(window).unload(function() {
-		closed();
-	});
-
+	// ensure that event fires, since browser support is a tad unreliable
+	$(window).unload(function() { closed(); });
 	window.onunload = function() { closed(); };
 	window.onbeforeunload = function() { closed(); };
 
@@ -127,7 +136,7 @@ Ext.onReady(function() {
 		get_categories();
 		login();
 		// get_queue will continue to call itself in a loop and call get_dispatch for the first time
-		get_queue(true);
+		//get_queue(true);
 	}, 100);
 });
 
@@ -172,7 +181,11 @@ function closed() {
 			id: question_id,
 		};
 
-		$.post(url, data, function(response) {
+		$.ajax({
+			url: url,
+			data: data,
+			type: 'POST',
+			async: false,
 		});
 	}
 }
