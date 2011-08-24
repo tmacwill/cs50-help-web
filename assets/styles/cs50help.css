@@ -1,0 +1,101 @@
+.category-block {
+	-moz-border-radius: 4px;
+	-webkit-border-radius: 4px;
+	padding: 2px 5px;
+}
+
+/* gray */
+.category-0 {
+	background: rgb(222, 229, 242);
+	color: rgb(90, 105, 134);
+}
+
+/* blue */
+.category-1 {
+	background: rgb(0, 0, 204);
+	color: rgb(223, 226, 255);
+}
+
+/* red */
+.category-2 {
+	background: rgb(204, 0, 0);
+	color: rgb(255, 227, 227);
+}
+
+/* orange */
+.category-3 {
+	background: rgb(236, 112, 0);
+	color: rgb(255, 240, 255);
+}
+
+/* green */
+.category-4 {
+	background: rgb(0, 102, 51);
+	color: rgb(241, 245, 236);
+}
+
+/* yellow */
+.category-5 {
+	background: rgb(255, 255, 0);
+	color: rgb(127, 96, 0);
+}
+
+/* black */
+.category-6 {
+	background: rgb(0, 0, 0);
+	color: rgb(255, 255, 255);
+}
+
+/* maroon */
+.category-7 {
+	background: rgb(102, 0, 0);
+	color: rgb(255, 255, 255);
+}
+
+/* light gray */
+.category-8 {
+	background: rgb(222, 229, 255);
+	color: rgb(90, 105, 134);
+}
+
+/* purple */
+.category-9 {
+	background: rgb(82, 41, 163);
+	color: rgb(224, 213, 249);
+}
+
+/* light blue */
+.category-10 {
+	background: rgb(32, 108, 255);
+	color: rgb(224, 236, 255);
+}
+
+/* gold */
+.category-11 {
+	background: rgb(171, 139, 0);
+	color: rgb(243, 231, 179);
+}
+
+/* light red */
+.category-12 {
+	background: rgb(255, 227, 227);
+	color: rgb(204, 0, 0);
+}
+
+/* mauve */
+.category-13 {
+	background: rgb(133, 79, 97);
+	color: rgb(253, 233, 244);
+}
+
+/* light green */
+.category-14 {
+	background: rgb(100, 153, 44);
+	color: rgb(249, 255, 239);
+}
+
+/* light purple */
+.category-15 {
+	background: rgb(224, 213, 249);
+	color: rgb(82, 41, 163);
+}

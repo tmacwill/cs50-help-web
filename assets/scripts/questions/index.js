@@ -152,11 +152,10 @@ Ext.onReady(function() {
 
 	// timeout prevents eternally loading favicon 
 	setTimeout(function() {
+		// synchronously get categories, get queue, and get dispatched (order matters here because of data dependence)
 		get_categories();
 		login();
-		// get_queue will continue to call itself in a loop and call get_dispatch for the first time
-		get_queue(true);
-		// get_can_ask will also continue to call itself
+		// this is also going to call itself in a loop
 		get_can_ask();
 	}, 100);
 });
@@ -226,8 +225,8 @@ function closed() {
  */
 function disable_form(button_text) {
 	Ext.getCmp('question-submit').setText(button_text || 'Put your hand down');
-	Ext.getCmp('question-text').setDisabled(true);
-	Ext.getCmp('question-category').setDisabled(true);
+	Ext.getCmp('question-text').setDisabled(true).setValue('');
+	Ext.getCmp('question-category').setDisabled(true).setValue('');
 	$('#current-position').show();
 	hand_up = true;
 }
@@ -289,6 +288,9 @@ function get_categories() {
         // load categories into data store
         var store = Ext.data.StoreManager.lookup('category_store');
         store.loadData(response.categories);
+
+		// get_queue will continue to call itself in a loop and call get_dispatch for the first time
+		get_queue(true);
 	});
 }
 
@@ -345,8 +347,15 @@ function get_queue(initial) {
 			if (response.changed) {
 				// load queue into data store
 				var store = Ext.data.StoreManager.lookup('queue_store');
+				var category_store = Ext.data.StoreManager.lookup('category_store');
 				var queue_key = course + '_queue';
-				store.loadData(response[course + '_queue']);
+
+				for (var question in response[queue_key]) {
+					category_index = category_store.findExact('category', response[queue_key][question].category);
+					response[queue_key][question].question = '<span class="category-block category-' + (category_index) + '">' + 
+						response[queue_key][question].category + '</span> ' + response[queue_key][question].question;
+				}
+				store.loadData(response[queue_key]);
 				
 				// get our question from the store if it exists
 				question_index = store.findExact('student_id', identity);
