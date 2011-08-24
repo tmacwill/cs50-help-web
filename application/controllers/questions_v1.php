@@ -20,7 +20,7 @@ class Questions_v1 extends CI_Controller {
 	);
 	
 	// urls requiring user to be logged in
-	private $login_restricted = array('', 'add', 'closed', 'dispatch', 'dispatched', 'hand_down', 'index', 'queue');
+	private $login_restricted = array('', 'add', 'can_ask', 'closed', 'dispatch', 'dispatched', 'hand_down', 'index', 'queue');
 	// urls restricted to current student and staff
 	private $current_login_restricted = array('add', 'closed', 'hand_down');
 	// urls restricted only to staff
@@ -69,13 +69,12 @@ class Questions_v1 extends CI_Controller {
 		session_start();
 		$user = $_SESSION[$course . '_user'];
 		session_write_close();
-
+		
 		// send user information to view
 		if (isset($user['identity']))
 			$this->template->set('identity', substr($user['identity'], strlen('https://id.cs50.net/')));
 		if (isset($user['name']))
 			$this->template->set('name', $user['name']);
-
 	}
 
 	/**
@@ -91,6 +90,14 @@ class Questions_v1 extends CI_Controller {
 		}
 		else
 			echo json_encode(array('success' => false));
+	}
+
+	/**
+	 * Check if OHs are in session, and therefore accepting new questions
+	 *
+	 */
+	public function can_ask($course) {
+		echo json_encode(array('can_ask' => $this->Question_v1->can_ask($course)));
 	}
 
 	/**

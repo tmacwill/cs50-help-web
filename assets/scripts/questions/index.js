@@ -1,3 +1,4 @@
+var can_ask = true;
 var current_position = 0;
 var hand_up = false;
 var queue = [];
@@ -47,50 +48,67 @@ Ext.onReady(function() {
 
 			items: [{
 				xtype: 'form',
-				height: 200,
+				height: 120,
 				id: 'question-form',
 				url: site_url + 'questions/dispatch',
+				bodyStyle: 'margin-top: 5px',
 				layout: { 
 					type: 'vbox',
 					align: 'stretch',
 				},
 
 				frame: true,
-				title: 'Ask a Question',
 				defaults: {
 					anchor: '100%'
 				},
 			
 				items: [{
-					xtype: 'textarea',
-					name: 'question-text',
-					id: 'question-text',
-					allowBlank: false,
-					emptyText: "Question text",
-				}, {
 					xtype: 'combobox',
-					fieldLabel: 'Category',
 					store: Ext.data.StoreManager.lookup('category_store'),
 					queryMode: 'local',
 					valueField: 'category',
 					displayField: 'category',
 					editable: false,
+					id: 'question-category',
+					name: 'question-category',
+					emptyText: "What's your question about?",
+					allowBlank: false,
 				}, {
-					xtype: 'checkbox',
-					boxLabel: 'Show your question in the queue',
-					name: 'question-show',
-					id: 'question-show',
-					checked: true,
-				}],
+					xtype: 'textarea',
+					name: 'question-text',
+					id: 'question-text',
+					allowBlank: false,
+					emptyText: "So that we can send you to the right person, what's your question in a short sentence?",
+					height: 40,
+				}, {
+					xtype: 'panel',
+					height: 30,
+					border: 0,
+					bodyStyle: 'background: #f1f1f1',
+					layout: {
+						type: 'hbox',
+						align: 'stretch',
+					},
 
-				buttonAlign: 'center',
-				buttons: [{
-					text: 'Ask',
-					id: 'question-submit',
-					handler: function() {
-						handle_question_submit();
-					}
-				}], 
+					items: [{
+						xtype: 'button',
+						text: 'Raise your hand',
+						flex: 2,
+						margin: 1,
+						id: 'question-submit',
+						handler: function() {
+							handle_question_submit();
+						}
+					}, {
+						xtype: 'checkbox',
+						boxLabel: 'Make me invisible to classmates',
+						checked: false,
+						flex: 1,
+						margin: 2,
+						name: 'question-show',
+						id: 'question-show',
+					}]
+				}],
 			}, {
 				xtype: 'gridpanel',
 				flex: 1,
@@ -114,10 +132,11 @@ Ext.onReady(function() {
 				xtype: 'tabpanel',
 				flex: 1,
 				id: 'tabs',
-				title: 'Chat',
+				title: 'Chat with your classmates about...',
 			}]
 		}]
 	});
+
 
 	// ask / hand down button pressed
 	$("#question-form").submit(function(e) {
@@ -136,7 +155,9 @@ Ext.onReady(function() {
 		get_categories();
 		login();
 		// get_queue will continue to call itself in a loop and call get_dispatch for the first time
-		//get_queue(true);
+		get_queue(true);
+		// get_can_ask will also continue to call itself
+		get_can_ask();
 	}, 100);
 });
 
@@ -146,18 +167,26 @@ Ext.onReady(function() {
  *
  */
 function add_question() {
-	var url = site_url + 'api/v1/questions/add';
+	// validate inputs
+	var question = Ext.getCmp('question-text').getValue();
+	var category = Ext.getCmp('question-category').getValue();
+	if (!question || !category) {
+		show_error('Tell us about your question first!');
+		return false;
+	}
 
+	// construct request
+	var url = site_url + 'api/v1/questions/add';
 	var data = {
 		student_id: identity,
 		name: name,
-		question: Ext.getCmp('question-text').getValue(),
-		category: $('#question-category').val(),
-		show: Number(Ext.getCmp('question-show').getValue()),
+		question: question,
+		category: category,
+		show: Number(!Ext.getCmp('question-show').getValue()),
 	};
 
+	// make sure user cannot post another question and send to server
 	disable_form();
-
 	$.post(url, data, function(response) {
 		response = JSON.parse(response);
 		if (response.success) {
@@ -181,6 +210,7 @@ function closed() {
 			id: question_id,
 		};
 
+		// make sure API call goes through before allowing window close
 		$.ajax({
 			url: url,
 			data: data,
@@ -194,10 +224,10 @@ function closed() {
  * Disallow students from asking a question (e.g. they already have an active question)
  *
  */
-function disable_form() {
-	Ext.getCmp('question-submit').setText('Put your hand down');
+function disable_form(button_text) {
+	Ext.getCmp('question-submit').setText(button_text || 'Put your hand down');
 	Ext.getCmp('question-text').setDisabled(true);
-	Ext.getCmp('question-text').setDisabled(true);
+	Ext.getCmp('question-category').setDisabled(true);
 	$('#current-position').show();
 	hand_up = true;
 }
@@ -206,12 +236,33 @@ function disable_form() {
  * Allow students to ask a question (e.g. they do not have an active question)
  *
  */
-function enable_form() {
-	Ext.getCmp('question-submit').setText('Ask');
+function enable_form(button_text) {
+	Ext.getCmp('question-submit').setText(button_text || 'Raise your hand');
 	Ext.getCmp('question-text').setDisabled(false);
+	Ext.getCmp('question-category').setDisabled(false);
 	$('#current-position').hide();
 	hand_up = false;
 }
+
+/**
+ * Check if OHs are in session, and therefore accepting new questions
+ * This API call is a straight cache read, so no long-polling required
+ *
+ */
+function get_can_ask() {
+	$.getJSON(site_url + 'api/v1/questions/can_ask', function(response) {
+		if (!response.can_ask) {
+			can_ask = false;
+			disable_form('Office hours are not in session!');
+		}
+
+		// TODO: check if 5 seconds is a reasonable timeout for this
+		setTimeout(function() {
+			get_can_ask();
+		}, 5000);
+	});
+}
+
 
 /**
  * Get the question categories for today
@@ -228,9 +279,12 @@ function get_categories() {
 				title: response.categories[i].category,
 				id: 'tab-' + response.categories[i].category,
 				layout: "fit",
-				html: '<iframe src="http://facebook.com/plugins/livefeed.php?api_key=137798392964646&sdk=joey&always_post_to_friends=false&height=' + box.height + '&width=' + box.width + '&xid=\'' + response.categories[i] + '\'" style="height:' + box.height + 'px; width: ' + box.width + 'px">',
+				html: '<iframe src="http://facebook.com/plugins/livefeed.php?api_key=137798392964646&sdk=joey&always_post_to_friends=false&height=' + box.height + '&width=' + box.width + '&xid=\'' + response.categories[i].category + '\'" style="height:' + box.height + 'px; width: ' + box.width + 'px">',
 			});
 		}
+
+		// make sure other is always shown
+		response.categories.push({ category: "Other" });
         
         // load categories into data store
         var store = Ext.data.StoreManager.lookup('category_store');
@@ -256,7 +310,9 @@ function get_dispatched(initial) {
 				var dispatch = response[course + '_dispatched'].filter(function(element, index, array) { return element.id == question_id });
 				// our question is considered dispatched until we ask another, so don't show multiple notifications for one dispatch
 				if (dispatch.length > 0) {
-					alert('WEE WOO WEE WOO YOUR TURN. GO SEE ' + dispatch[0].tf);
+					window.focus();
+					alert('It\'s your turn! Go see ' + dispatch[0].tf + '!');
+					window.focus();
 
 					question_id = null;
 					hand_up = false;
@@ -289,6 +345,7 @@ function get_queue(initial) {
 			if (response.changed) {
 				// load queue into data store
 				var store = Ext.data.StoreManager.lookup('queue_store');
+				var queue_key = course + '_queue';
 				store.loadData(response[course + '_queue']);
 				
 				// get our question from the store if it exists
@@ -303,7 +360,7 @@ function get_queue(initial) {
 				// disable form if we have already asked a question
 				if (question_id)
 					disable_form();
-				else
+				else if (can_ask)
 					enable_form();
 
 				// begin dispatched long-polling loop
@@ -340,6 +397,7 @@ function login() {
 	};
 
 	$.post(url, data, function(response) {
+		// have to do anything here? no? okay.
 	});
 }
 
@@ -356,7 +414,7 @@ function put_hand_down() {
 
 	$.post(url, data, function(response) {
 		response = JSON.parse(response);
-		if (response.success) {
+		if (response.success && can_ask) {
 			enable_form();
 			question_id = null;
 			hand_up = false;

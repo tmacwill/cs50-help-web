@@ -22,8 +22,9 @@ class Question_v1 extends CI_Model {
 
 	// memcache instance and constants
 	private $memcache;
-	const MEMCACHE_KEY_QUEUE = '_queue';
+	const MEMCACHE_KEY_CAN_ASK = '_can_ask';
 	const MEMCACHE_KEY_DISPATCHED = '_dispatched';
+	const MEMCACHE_KEY_QUEUE = '_queue';
 	const MEMCACHE_SUFFIX_UPDATE = '_last_update';
 	const LONG_POLLING_TIMEOUT = 25;
 
@@ -49,8 +50,8 @@ class Question_v1 extends CI_Model {
 		$student = $this->db->get_where(self::TABLE, array(self::COURSE_COLUMN => $course, 
 					self::STUDENT_ID_COLUMN => $data[self::STUDENT_ID_COLUMN], self::STATE_COLUMN => self::STATE_HAND_UP))->row();
 
-		// student is not present yet, so add new question
-		if (!$student) {
+		// student is not present yet and OHs are still in session, so add new question
+		if (!$student && $this->can_ask($course)) {
 			$data[self::COURSE_COLUMN] = $course;
 			$this->db->insert(self::TABLE, $data);
 			$this->memcache->delete($this->get_key_queue($course));
@@ -59,6 +60,15 @@ class Question_v1 extends CI_Model {
 		}
 		else
 			return false;
+	}
+
+	/**
+	 * Check whether or not OHs are in session, and therefore accepting new questions
+	 * @param $course [String] Course url
+	 *
+	 */
+	public function can_ask($course) {
+		return $this->memcache->get($this->get_key_can_ask($course));
 	}
 
 	/**
@@ -112,6 +122,16 @@ class Question_v1 extends CI_Model {
 	}
 
 	/**
+	 * Get cache key for whether or not OHs are in session
+	 * @param [String] $course Course url
+	 * @return Cache key
+	 *
+	 */
+	private function get_key_can_ask($course) {
+		return $course . self::MEMCACHE_KEY_CAN_ASK;
+	}
+
+	/**
 	 * Get cache key for the list of dispatched questions
 	 * @param [String] $course Course url
 	 * @return Cache key
@@ -157,22 +177,33 @@ class Question_v1 extends CI_Model {
 	 *
 	 */
 	public function get_queue($course, $force = false) {
+		// get all active questions for the current course
 		$queue = $this->long_poll($this->get_key_queue($course), self::STATE_HAND_UP, $course, $force);
+
+		// assign positions and hide hidden questions
 		$i = 0;
-		foreach ($queue[$this->get_key_queue($course)] as $q)
+		foreach ($queue[$this->get_key_queue($course)] as $q) {
+			// TODO: convert long_polll to use result_array to avoid hard-coding column names here
 			$q->position = ++$i;
+			if (!$q->show) {
+				$q->name = 'Invisible';
+				$q->question = '';
+				$q->category = '';
+			}
+		}
 		
 		return $queue;
 	}
 
 	/** 
 	 * User has logged in, so re-activate any closed window questions
+	 * @param $student_id [String] Unique ID of student
+	 * @param $course [String] Course url
 	 *
 	 */
 	public function login($student_id, $course) {
 		$this->db->set(self::STATE_COLUMN, self::STATE_HAND_UP)->
-			where(array(self::STUDENT_ID_COLUMN => $student_id, self::STATE_COLUMN => self::STATE_CLOSED,
-				'DATE(' . self::TIMESTAMP_COLUMN . ')' => date('Y-m-d')));
+			where(array(self::STUDENT_ID_COLUMN => $student_id, self::STATE_COLUMN => self::STATE_CLOSED));
 		$this->db->update(self::TABLE);
 	}
 
@@ -205,8 +236,7 @@ class Question_v1 extends CI_Model {
 			if ($result === null || $result === false || $force) {
 				// get all students with matching state for current date
 				$result = $this->db->order_by(self::TIMESTAMP_COLUMN, 'asc')->
-					get_where(self::TABLE, array(self::STATE_COLUMN => $state, self::COURSE_COLUMN => $course,
-								'DATE(' . self::TIMESTAMP_COLUMN . ')' => date('Y-m-d')))->result();
+					get_where(self::TABLE, array(self::STATE_COLUMN => $state, self::COURSE_COLUMN => $course))->result();
 
 				// empty queue and null key are two very different things
 				if ($result === null)
