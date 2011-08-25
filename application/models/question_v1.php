@@ -16,7 +16,9 @@ class Question_v1 extends CI_Model {
 	const COURSE_COLUMN = 'course';
 	const QUESTION_COLUMN = 'question';
 	const CATEGORY_COLUMN = 'category';
+	const CATEGORY_COLOR_COLUMN = 'category_color';
 	const TIMESTAMP_COLUMN = 'timestamp';
+	const DISPATCH_TIMESTAMP_COLUMN = 'dispatch_timestamp';
 	const TF_COLUMN = 'tf';
 	const STATE_COLUMN = 'state';
 
@@ -100,7 +102,7 @@ class Question_v1 extends CI_Model {
 		}
 
 		// mark questions as dispatched
-		$this->db->set(array(self::TF_COLUMN => $tf, self::STATE_COLUMN => self::STATE_DISPATCHED))->where_in(self::ID_COLUMN, $ids);
+		$this->db->set(array(self::TF_COLUMN => $tf, self::STATE_COLUMN => self::STATE_DISPATCHED))->set(self::DISPATCH_TIMESTAMP_COLUMN, 'NOW()', false)->where_in(self::ID_COLUMN, $ids);
 		$this->db->update(self::TABLE);
 
 		// update both queue and dispatch cache
@@ -257,10 +259,11 @@ class Question_v1 extends CI_Model {
 				$_SESSION[$update_key] = $this->memcache->get($update_key);
 				session_write_close();
 
+				// return updated data from the cache
 				return array($memcache_key => $result, 'changed' => true, 'source' => 'memcache');
 			}
 
-			// cache key still valid, so sleep and try again
+			// cache data still valid, so sleep and try again
 			sleep(1);
 		}
 
@@ -277,6 +280,7 @@ class Question_v1 extends CI_Model {
 		if (empty($id) || empty($state))
 			return false;
 
+		// update database and invalidate cache
 		$this->db->set(self::STATE_COLUMN, $state)->where(array(self::ID_COLUMN => $id, self::COURSE_COLUMN => $course));
 		$this->db->update(self::TABLE);
 		$this->memcache->delete($this->get_key_queue($course));

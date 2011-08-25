@@ -174,6 +174,10 @@ function add_question() {
 		return false;
 	}
 
+	// determine selected index, which maps to category_color
+	var category_store = Ext.data.StoreManager.lookup('category_store');
+	var category_color = category_store.findExact('category', category);
+
 	// construct request
 	var url = site_url + 'api/v1/questions/add';
 	var data = {
@@ -181,6 +185,7 @@ function add_question() {
 		name: name,
 		question: question,
 		category: category,
+		category_color: category_color,
 		show: Number(!Ext.getCmp('question-show').getValue()),
 	};
 
