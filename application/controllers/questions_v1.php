@@ -148,6 +148,17 @@ class Questions_v1 extends CI_Controller {
 	}
 
 	/**
+	 * Student made their quesiton invisible
+	 *
+	 */
+	public function invisible($course) {
+		if ($this->Question_v1->set_show($this->input->post('id'), 0, $course))
+			echo json_encode(array('success' => true));
+		else
+			echo json_encode(array('success' => false));
+	}
+
+	/**
 	 * Main page for student help
 	 *
 	 */
@@ -177,6 +188,17 @@ class Questions_v1 extends CI_Controller {
 			$queue['success'] = true;
 			echo json_encode($queue);
 		}
+		else
+			echo json_encode(array('success' => false));
+	}
+
+	/**
+	 * Student made their quesiton visible
+	 *
+	 */
+	public function visible($course) {
+		if ($this->Question_v1->set_show($this->input->post('id'), 1, $course))
+			echo json_encode(array('success' => true));
 		else
 			echo json_encode(array('success' => false));
 	}

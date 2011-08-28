@@ -107,6 +107,9 @@ Ext.onReady(function() {
 						margin: 2,
 						name: 'question-show',
 						id: 'question-show',
+						handler: function() {
+							handle_show_toggle();
+						},
 					}]
 				}],
 			}, {
@@ -261,7 +264,7 @@ function get_can_ask() {
 		}
 		else {
 			can_ask = true;
-			if (Ext.getCmp('question-text').getDisabled())
+			if (Ext.getCmp('question-text').disabled)
 				enable_form();
 		}
 
@@ -408,6 +411,30 @@ function handle_question_submit() {
 	}
 }
 
+function handle_show_toggle() {
+	var show = Ext.getCmp('question-show').getValue();
+	if (question_id) {
+		if (!show)
+			show_question();
+		else
+			hide_question();
+	}
+}
+
+/**
+ * Hide the student's active question in the queue
+ *
+ */
+function hide_question() {
+	var url = site_url + 'api/v1/questions/invisible';
+	var data = {
+		id: question_id,
+	};
+
+	$.post(url, data, function(response) {
+	});
+}
+
 /**
  * Mark closed questions as hand up
  *
@@ -453,4 +480,18 @@ function put_hand_down() {
  */
 function show_error(message) {
 	alert(message || "An error occurred. Please alert the dispatcher.");
+}
+
+/**
+ * Show the student's active question in the queue
+ *
+ */
+function show_question() {
+	var url = site_url + 'api/v1/questions/visible';
+	var data = {
+		id: question_id,
+	};
+
+	$.post(url, data, function(response) {
+	});
 }

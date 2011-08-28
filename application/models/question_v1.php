@@ -15,6 +15,7 @@ class Question_v1 extends CI_Model {
 	const NAME_COLUMN = 'name';
 	const COURSE_COLUMN = 'course';
 	const QUESTION_COLUMN = 'question';
+	const SHOW_COLUMN = 'show';
 	const CATEGORY_COLUMN = 'category';
 	const CATEGORY_COLOR_COLUMN = 'category_color';
 	const TIMESTAMP_COLUMN = 'timestamp';
@@ -271,9 +272,26 @@ class Question_v1 extends CI_Model {
 	}
 
 	/**
+	 * Set the visibility of a single question
+	 * @param $id [Integer] ID of the question to set
+	 * @param $state [Integer] Value of question's visibility
+	 *
+	 */
+	public function set_show($id, $show, $course) {
+		if (empty($id))
+			return false;
+
+		$this->db->set(self::SHOW_COLUMN, $show)->where(array(self::ID_COLUMN => $id));
+		$this->db->update(self::TABLE);
+		$this->memcache->delete($this->get_key_queue($course));
+
+		return true;
+	}
+
+	/**
 	 * Set the state of a single question
-	 * @param $id [Integer] ID of the student to set
-	 * @param $state [Integer] Value of student's state
+	 * @param $id [Integer] ID of the question to set
+	 * @param $state [Integer] Value of question's state
 	 *
 	 */
 	public function set_state($id, $state, $course) {
@@ -281,7 +299,7 @@ class Question_v1 extends CI_Model {
 			return false;
 
 		// update database and invalidate cache
-		$this->db->set(self::STATE_COLUMN, $state)->where(array(self::ID_COLUMN => $id, self::COURSE_COLUMN => $course));
+		$this->db->set(self::STATE_COLUMN, $state)->where(array(self::ID_COLUMN => $id));
 		$this->db->update(self::TABLE);
 		$this->memcache->delete($this->get_key_queue($course));
 
