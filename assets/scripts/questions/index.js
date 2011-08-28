@@ -176,7 +176,7 @@ function add_question() {
 
 	// determine selected index, which maps to category_color
 	var category_store = Ext.data.StoreManager.lookup('category_store');
-	var category_color = category_store.findExact('category', category);
+	var category_color = category_store.findExact('category', category) % category_store.data.length;
 
 	// construct request
 	var url = site_url + 'api/v1/questions/add';
@@ -261,7 +261,8 @@ function get_can_ask() {
 		}
 		else {
 			can_ask = true;
-			enable_form();
+			if (Ext.getCmp('question-text').getDisabled())
+				enable_form();
 		}
 
 		// TODO: check if 5 seconds is a reasonable timeout for this
@@ -278,11 +279,11 @@ function get_can_ask() {
  */
 function get_categories() {
 	$.getJSON(site_url + 'api/v1/spreadsheets/categories', function(response) {
-        // iterate over tab box
+		// iterate over tab box
 		var tabs = Ext.getCmp('tabs');
 		var box = tabs.getBox();
 		for (i in response.categories) {
-            // add tab with unique XID for each category
+			// add tab with unique XID for each category
 			var tab = tabs.add({
 				title: response.categories[i].category,
 				id: 'tab-' + response.categories[i].category,
@@ -322,6 +323,7 @@ function get_dispatched(initial) {
 				// our question is considered dispatched until we ask another, so don't show multiple notifications for one dispatch
 				if (dispatch.length > 0) {
 					window.focus();
+					document.getElementById('dispatch-sound').play();
 					alert('It\'s your turn! Go see ' + dispatch[0].tf + '!');
 					window.focus();
 

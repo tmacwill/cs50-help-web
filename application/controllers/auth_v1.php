@@ -174,6 +174,9 @@ class Auth_v1 extends CI_Controller {
 	 *
 	 */
 	private function verify_student($user, $course) {
+		// temporarily allow anyone to log in
+		return true;
+
 		$students = $this->Spreadsheet_v1->get_students($course);
 		$is_student = false;
 	
