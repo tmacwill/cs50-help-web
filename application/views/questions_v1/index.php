@@ -1,7 +1,7 @@
 <script>
 
-var identity = "<?= $identity ?>";
-var name = "<?= isset($name) ? $name : '' ?>";
-var course = "<?= $course ?>";
+var identity = "<?php echo $identity ?>";
+var name = "<?php echo isset($name) ? $name : '' ?>";
+var course = "<?php echo $course ?>";
 
 </script>

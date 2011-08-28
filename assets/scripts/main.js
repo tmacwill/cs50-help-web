@@ -1,4 +1,4 @@
-var BASE_URL = 'http://tommymacwilliam.com/cs50help/';
+var BASE_URL = 'http://ohs.cs50.net';
 var auth = null;
 var current_position = 0;
 var hand_up = false;

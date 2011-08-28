@@ -110,6 +110,7 @@
             // get response
             $consumer = new Auth_OpenID_Consumer(new Auth_OpenID_FileStore($directory));
             $response = $consumer->complete($return_to);
+
             if ($response->status == Auth_OpenID_SUCCESS)
             {
                 // get user's identity

@@ -31,8 +31,8 @@ class Questions_v1 extends CI_Controller {
 		$this->load->model('Question_v1');
 
 		// load assets
-		$this->carabiner->js($this->js_assets);
 		$this->carabiner->css($this->css_assets);
+		$this->carabiner->js($this->js_assets);
 
 		// form validator should escape all input
 		$rules = array(

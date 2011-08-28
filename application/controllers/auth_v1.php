@@ -1,11 +1,12 @@
 <?php
 
 require_once(dirname(__FILE__) . '/cs50/CS50.php');
+//require_once('CS50/CS50.php');
 
 class Auth_v1 extends CI_Controller {
-	const STATE = '/srv/www/tommymacwilliam.com/public_html/cs50help/application/cs50id_state';
-	const TRUST_ROOT = 'http://tommymacwilliam.com/cs50help/auth/';
-	const RETURN_TO = 'http://tommymacwilliam.com/cs50help/auth/return_to';
+	const STATE = '/var/www/html/application/cs50id_state';
+	const TRUST_ROOT = 'http://ohs.cs50.net/auth/';
+	const RETURN_TO = 'http://ohs.cs50.net/auth/return_to';
 
 	function __construct() {
 		parent::__construct();
@@ -54,9 +55,9 @@ class Auth_v1 extends CI_Controller {
 			// construct return url, which includes data format and course url
 			$return_to = self::RETURN_TO;
 			$return_to .= '?course=' . $course;
-			if ($_REQUEST['format'])
+			if (isset($_REQUEST['format']))
 				$return_to .= '&format=' . $_REQUEST['format'];
-			if ($_REQUEST['staff_required'])
+			if (isset($_REQUEST['staff_required']))
 				$return_to .= '&staff_required=true';
 
 			redirect(CS50::getLoginUrl(self::STATE, self::TRUST_ROOT, $return_to, array('fullname', 'email'), array('https://id.cs50.net/schema/harvardeduidnumber')));
@@ -111,8 +112,11 @@ class Auth_v1 extends CI_Controller {
 			);
 			$_SESSION[$course . '_user'] = $session_user;
 
-			// successful login, output user info
-			if ($_REQUEST['format'] == 'json') {
+			// get desired request format
+			$format = (isset($_REQUEST['format'])) ? $_REQUEST['format'] : '';
+
+			// api: output user info
+			if ($format == 'json') {
 				echo json_encode(array(
 					'success' => true,
 					'user' => $session_user,
@@ -120,7 +124,7 @@ class Auth_v1 extends CI_Controller {
 			}
 
 			// ipad: redirect user to URL that will close UIWebView
-			else if ($_REQUEST['format'] == 'ipad') 
+			else if ($format == 'ipad') 
 				header('Location: cs50help://user/' . $identity . '/' . $name . '/' . session_id());
 
 			// web app: redirect user to questions view

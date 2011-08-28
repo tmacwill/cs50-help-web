@@ -39,7 +39,7 @@ while ($row = mysql_fetch_assoc($result)) {
 
 	// set memcache flag
 	$memcache_key = $course . '_can_ask';
-	$memcache->set($memcache_key, $can_ask);
+	$memcache->set($memcache_key, $can_ask, 0, 0);
 }
 
 ?>

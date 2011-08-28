@@ -1,5 +1,5 @@
 RewriteEngine on
-RewriteBase /cs50help
+RewriteBase /
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond $1 !^(index\.php|assets|robots\.txt|\.git)
