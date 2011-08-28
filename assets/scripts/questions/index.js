@@ -259,6 +259,10 @@ function get_can_ask() {
 			can_ask = false;
 			disable_form('Office hours are not in session!');
 		}
+		else {
+			can_ask = true;
+			enable_form();
+		}
 
 		// TODO: check if 5 seconds is a reasonable timeout for this
 		setTimeout(function() {
@@ -394,10 +398,12 @@ function get_queue(initial) {
  *
  */
 function handle_question_submit() {
-	if (hand_up)
-		put_hand_down();
-	else
-		add_question();
+	if (can_ask) {
+		if (hand_up)
+			put_hand_down();
+		else
+			add_question();
+	}
 }
 
 /**
