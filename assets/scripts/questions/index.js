@@ -264,8 +264,6 @@ function get_can_ask() {
 		}
 		else {
 			can_ask = true;
-			if (Ext.getCmp('question-text').disabled)
-				enable_form();
 		}
 
 		// TODO: check if 5 seconds is a reasonable timeout for this
