@@ -374,6 +374,8 @@ function get_queue(initial) {
 				if (question_index > -1) {
 					question_id = store.getAt(question_index).data.id;
 					hand_up = true;
+					if (!Number(store.getAt(question_index).data.show))
+						Ext.getCmp('question-show').setValue(true);
 				}
 			}
 

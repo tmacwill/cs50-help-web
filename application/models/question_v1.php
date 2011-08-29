@@ -189,7 +189,7 @@ class Question_v1 extends CI_Model {
 			// TODO: convert long_polll to use result_array to avoid hard-coding column names here
 			$q->position = ++$i;
 			if (!$q->show && !isset($_SESSION[$course . '_staff'])) {
-				$q->name = 'Invisible';
+				$q->name = 'Incognito';
 				$q->question = '';
 				$q->category = '';
 			}
