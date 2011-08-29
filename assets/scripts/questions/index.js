@@ -359,12 +359,10 @@ function get_queue(initial) {
 			if (response.changed) {
 				// load queue into data store
 				var store = Ext.data.StoreManager.lookup('queue_store');
-				var category_store = Ext.data.StoreManager.lookup('category_store');
 				var queue_key = course + '_queue';
 
 				for (var question in response[queue_key]) {
-					category_index = category_store.findExact('category', response[queue_key][question].category);
-					response[queue_key][question].question = '<span class="category-block category-' + (category_index) + '">' + 
+					response[queue_key][question].question = '<span class="category-block category-' + (response[queue_key][question].category_color) + '">' + 
 						response[queue_key][question].category + '</span> ' + response[queue_key][question].question;
 				}
 				store.loadData(response[queue_key]);
