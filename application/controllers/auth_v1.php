@@ -5,12 +5,19 @@ require_once(dirname(__FILE__) . '/cs50/CS50.php');
 
 class Auth_v1 extends CI_Controller {
 	const STATE = '/var/www/html/application/cs50id_state';
-	const TRUST_ROOT = 'http://ohs.cs50.net/auth/';
-	const RETURN_TO = 'http://ohs.cs50.net/auth/return_to';
 
 	function __construct() {
 		parent::__construct();
 		$this->load->model('Spreadsheet_v1');
+
+        if (getenv('SERVER') == 'DEV') {
+			define(TRUST_ROOT, 'http://192.168.56.50/auth/');
+			define(RETURN_TO, 'http://192.168.56.50/auth/return_to');
+		}
+		else {
+			define(TRUST_ROOT, 'http://queue.cs50.net/auth/');
+			define(RETURN_TO, 'http://queue.cs50.net/auth/return_to');  
+		}
 	}
 
 	/**
@@ -53,14 +60,14 @@ class Auth_v1 extends CI_Controller {
 			redirect($course . '/questions/index');
 		else {
 			// construct return url, which includes data format and course url
-			$return_to = self::RETURN_TO;
+			$return_to = RETURN_TO;
 			$return_to .= '?course=' . $course;
 			if (isset($_REQUEST['format']))
 				$return_to .= '&format=' . $_REQUEST['format'];
 			if (isset($_REQUEST['staff_required']))
 				$return_to .= '&staff_required=true';
 
-			redirect(CS50::getLoginUrl(self::STATE, self::TRUST_ROOT, $return_to, array('fullname', 'email'), array('https://id.cs50.net/schema/harvardeduidnumber')));
+			redirect(CS50::getLoginUrl(self::STATE, TRUST_ROOT, $return_to, array('fullname', 'email'), array('https://id.cs50.net/schema/harvardeduidnumber')));
 		}
 	}
 
@@ -88,7 +95,7 @@ class Auth_v1 extends CI_Controller {
 	 */
 	public function return_to() {
 		// get user information from CS50 ID
-		$user = CS50::getUser(self::STATE, self::RETURN_TO);
+		$user = CS50::getUser(self::STATE, RETURN_TO);
 		$course = $_REQUEST['course'];
 
 		// successful login

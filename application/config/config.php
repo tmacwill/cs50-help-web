@@ -14,7 +14,11 @@
 | path to your installation.
 |
 */
-$config['base_url']	= 'http://ohs.cs50.net/';
+
+if (getenv('SERVER') == 'DEV')
+    $config['base_url']	= 'http://192.168.56.50/';
+else
+    $config['base_url']	= 'http://queue.cs50.net/';
 
 /*
 |--------------------------------------------------------------------------

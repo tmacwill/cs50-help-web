@@ -101,7 +101,7 @@ Ext.onReady(function() {
 						}
 					}, {
 						xtype: 'checkbox',
-						boxLabel: 'Make me invisible to classmates',
+						boxLabel: 'Make you invisible to classmates',
 						checked: false,
 						flex: 1,
 						margin: 2,
@@ -361,10 +361,16 @@ function get_queue(initial) {
 				// load queue into data store
 				var store = Ext.data.StoreManager.lookup('queue_store');
 				var queue_key = course + '_queue';
+				var question_text = '';
 
 				for (var question in response[queue_key]) {
-					response[queue_key][question].question = '<span class="category-block category-' + (response[queue_key][question].category_color) + '">' + 
-						response[queue_key][question].category + '</span> ' + response[queue_key][question].question;
+					if (response[queue_key][question].category) {
+						question_text = '<span class="category-block category-' + (response[queue_key][question].category_color) + '">' + 
+							response[queue_key][question].category + '</span> ';
+					}
+
+					question_text += response[queue_key][question].question;
+					response[queue_key][question].question = question_text;
 				}
 				store.loadData(response[queue_key]);
 				
