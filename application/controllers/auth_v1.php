@@ -41,8 +41,10 @@ class Auth_v1 extends CI_Controller {
 					echo json_encode(array('success' => false));
 					exit;
 				}
-				else 
+				else {
 					redirect($course . '/auth/login');
+					exit;
+				}
 			}
 		}
 	}

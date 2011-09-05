@@ -40,7 +40,7 @@
 
 $CURRENT_VERSION = 1;
 
-$route['default_controller'] = "questions";
+$route['default_controller'] = "questions_v1";
 $route['404_override'] = '';
 
 /**
@@ -48,6 +48,12 @@ $route['404_override'] = '';
  *
  */
 $route['auth/return_to'] = "auth_v{$CURRENT_VERSION}/return_to";
+
+/**
+ * Shorter per-course URL to enter the queue
+ *
+ */
+$route['(\w+)'] = "questions_v{$CURRENT_VERSION}/q/$1";
 
 /**
  * API call 
