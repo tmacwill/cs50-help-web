@@ -118,6 +118,7 @@ Ext.onReady(function() {
 				id: 'queueContainer',
 				title: 'Queue',
 				store: Ext.data.StoreManager.lookup('queue_store'),
+				autoScroll: true,
 				columns: [
 					{ header: 'Position', dataIndex: 'position', flex: 1 },
 					{ header: 'Name', dataIndex: 'name', flex: 2 },
@@ -296,9 +297,9 @@ function get_categories() {
 		// make sure other is always shown
 		response.categories.push({ category: "Other" });
         
-        // load categories into data store
-        var store = Ext.data.StoreManager.lookup('category_store');
-        store.loadData(response.categories);
+		// load categories into data store
+		var store = Ext.data.StoreManager.lookup('category_store');
+		store.loadData(response.categories);
 
 		// get_queue will continue to call itself in a loop and call get_dispatch for the first time
 		get_queue(true);
