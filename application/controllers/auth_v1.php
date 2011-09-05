@@ -57,7 +57,7 @@ class Auth_v1 extends CI_Controller {
 		
 		// user is already logged in, so redirect to main page
 		if (isset($_SESSION[$course . '_user']))
-			redirect($course . '/questions/index');
+			redirect($course . '/questions/q');
 		else {
 			// construct return url, which includes data format and course url
 			$return_to = RETURN_TO;
@@ -136,7 +136,7 @@ class Auth_v1 extends CI_Controller {
 
 			// web app: redirect user to questions view
 			else
-				redirect($_REQUEST['course'] . '/questions/index');
+				redirect($_REQUEST['course'] . '/questions/q');
 		}
 
 		// invalid user, so redirect back to login page
