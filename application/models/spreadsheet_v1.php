@@ -64,7 +64,7 @@ class Spreadsheet_v1 extends CI_Model {
 			$matches = array();
 			preg_match('/When: (\w+ \w+ \d+, \d+)/', (string)$event->summary, $matches);
 			$date = $matches[1];
-			if (date('D M d, Y') == $matches[1]) {
+			if (date('D M j, Y') == $matches[1]) {
 				// title of event must be CSV of staff
 				$on_duty = explode(',', (string)$event->title);
 				$on_duty = array_map('trim', $on_duty);
