@@ -20,7 +20,7 @@ class Questions_v1 extends CI_Controller {
 	);
 	
 	// urls requiring user to be logged in
-	private $login_restricted = array('', 'add', 'can_ask', 'closed', 'dispatch', 'dispatched', 'hand_down', 'index', 'queue');
+	private $login_restricted = array('', 'add', 'can_ask', 'closed', 'dispatch', 'dispatched', 'hand_down', 'index', 'q', 'queue');
 	// urls restricted to current student and staff
 	private $current_login_restricted = array('add', 'closed', 'hand_down');
 	// urls restricted only to staff
@@ -176,6 +176,16 @@ class Questions_v1 extends CI_Controller {
 			echo json_encode(array('success' => true));
 		else
 			echo json_encode(array('success' => false));
+	}
+
+	/**
+	 * Main page for student help (alias for index)
+	 *
+	 */
+	public function q() {
+		$this->template->current_view = 'questions_v1/index';
+		$this->carabiner->js('questions/index.js');
+		$this->template->render();
 	}
 
 	/**
