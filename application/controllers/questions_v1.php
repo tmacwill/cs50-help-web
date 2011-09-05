@@ -58,17 +58,25 @@ class Questions_v1 extends CI_Controller {
 		$this->form_validation->set_rules($rules);
 		$this->form_validation->run();
 
-		// make sure user is authenticated if need be
-		Auth_v1::authenticate($this->uri->segment(1), $this->uri->segment(3), $this->input->post('student_id'), $this->login_restricted, $this->current_login_restricted, $this->staff_restricted);
-
 		// send course url to view
 		$course = $this->uri->segment(1);
+		if (empty($course))
+			$course = 'cs50';
 		$this->template->set('course', $course);
+
+		// make sure user is authenticated if need be
+		Auth_v1::authenticate($course, $this->uri->segment(3), $this->input->post('student_id'), $this->login_restricted, $this->current_login_restricted, $this->staff_restricted);
 
 		// get user information from session
 		session_start();
-		$user = $_SESSION[$course . '_user'];
+		$user = isset($_SESSION[$course . '_user']) ? $_SESSION[$course . '_user'] : null;
 		session_write_close();
+
+		// make sure user exists
+		if (!$user) {
+			redirect("/{$course}/auth/login");
+			exit();
+		}
 		
 		// send user information to view
 		if (isset($user['identity']))
