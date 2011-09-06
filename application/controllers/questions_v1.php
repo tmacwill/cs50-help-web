@@ -1,7 +1,5 @@
 <?php
 
-require_once 'auth_v1.php';
-
 class Questions_v1 extends CI_Controller {
 	const FILTER = 'htmlspecialchars';
 	
@@ -19,13 +17,6 @@ class Questions_v1 extends CI_Controller {
 		array('cs50help.css'),
 	);
 	
-	// urls requiring user to be logged in
-	private $login_restricted = array('', 'add', 'can_ask', 'closed', 'dispatch', 'dispatched', 'hand_down', 'index', 'q', 'queue');
-	// urls restricted to current student and staff
-	private $current_login_restricted = array('add', 'closed', 'hand_down');
-	// urls restricted only to staff
-	private $staff_restricted = array('dispatch');
-
 	public function __construct() {
 		parent::__construct();
 		$this->load->model('Question_v1');
@@ -64,9 +55,6 @@ class Questions_v1 extends CI_Controller {
 			$course = 'cs50';
 		$this->template->set('course', $course);
 
-		// make sure user is authenticated if need be
-		Auth_v1::authenticate($course, $this->uri->segment(3), $this->input->post('student_id'), $this->login_restricted, $this->current_login_restricted, $this->staff_restricted);
-
 		// get user information from session
 		session_start();
 		$user = isset($_SESSION[$course . '_user']) ? $_SESSION[$course . '_user'] : null;
@@ -80,7 +68,7 @@ class Questions_v1 extends CI_Controller {
 		
 		// send user information to view
 		if (isset($user['identity']))
-			$this->template->set('identity', substr($user['identity'], strlen('https://id.cs50.net/')));
+			$this->template->set('identity', $user['identity']);
 		if (isset($user['name']))
 			$this->template->set('name', $user['name']);
 	}
@@ -90,6 +78,11 @@ class Questions_v1 extends CI_Controller {
 	 *
 	 */
 	public function add($course) {
+		if (!$this->authenticate_user($course)) {
+			echo json_encode(array('success' => false));
+			return false;
+		}
+
 		if ($this->Question_v1->add($this->input->post(), $course)) {
 			echo json_encode(array(
 				'success' => true,
@@ -98,6 +91,49 @@ class Questions_v1 extends CI_Controller {
 		}
 		else
 			echo json_encode(array('success' => false));
+	}
+
+	/**
+	 * Ensure the logged-in user is a staff member
+	 * @param $course [String] Course url
+	 *
+	 */
+	public function authenticate_staff($course) {
+		session_start();
+		$user = isset($_SESSION[$course . '_user']) ? $_SESSION[$course . '_user'] : false;
+		$staff = isset($_SESSION[$course . '_staff']) ? $_SESSION[$course . '_staff'] : false;
+		session_write_close();
+
+		return !!$staff;
+	}
+
+	/**
+	 * Ensure the logged-in user is a student and owns the object they are trying to operate on
+	 * @param $course [String] Course url
+	 * @param $question_id [Integer] Question ID to operate
+	 *
+	 */
+	public function authenticate_user($course, $question_id = false) {
+		session_start();
+		$user = isset($_SESSION[$course . '_user']) ? $_SESSION[$course . '_user'] : false;
+		$staff = isset($_SESSION[$course . '_staff']) ? $_SESSION[$course . '_staff'] : false;
+		session_write_close();
+
+		// user is not logged in, so redirect to login page
+		if (!$user) {
+			redirect("/{$course}/auth/login");
+			exit();
+		}
+
+		// staff can do anything
+		if ($staff)
+			return true;
+
+		// if not staff, make sure current student owns question
+		if ($question_id)
+			return $this->Question_v1->check_permission($course, $question_id);
+
+		return true;
 	}
 
 	/**
@@ -113,6 +149,11 @@ class Questions_v1 extends CI_Controller {
 	 *
 	 */
 	public function closed($course) {
+		if (!$this->authenticate_user($course, $this->input->post('id'))) {
+			echo json_encode(array('success' => false));
+			return false;
+		}
+
 		if ($this->Question_v1->set_state($this->input->post('id'), Question_v1::STATE_CLOSED, $course))
 			echo json_encode(array('success' => true));
 		else
@@ -124,6 +165,11 @@ class Questions_v1 extends CI_Controller {
 	 *
 	 */
 	public function dispatch($course) {
+		if (!$this->authenticate_staff($course)) {
+			echo json_encode(array('success' => false));
+			return false;
+		}
+
 		if ($this->Question_v1->dispatch(explode(',', $this->input->post('ids')), $this->input->post('tf'), $course))
 			echo json_encode(array('success' => true));
 		else
@@ -135,6 +181,11 @@ class Questions_v1 extends CI_Controller {
 	 *
 	 */
 	public function dispatched($course, $force = false) {
+		if (!$this->authenticate_user($course)) {
+			echo json_encode(array('success' => false));
+			return false;
+		}
+
 		$dispatched = $this->Question_v1->get_dispatched($course, $force);
 		if ($dispatched) {
 			$dispatched['success'] = true;
@@ -149,6 +200,11 @@ class Questions_v1 extends CI_Controller {
 	 *
 	 */
 	public function hand_down($course) {
+		if (!$this->authenticate_user($course, $this->input->post('id'))) {
+			echo json_encode(array('success' => false));
+			return false;
+		}
+
 		if ($this->Question_v1->set_state($this->input->post('id'), Question_v1::STATE_HAND_DOWN, $course))
 			echo json_encode(array('success' => true));
 		else
@@ -160,6 +216,11 @@ class Questions_v1 extends CI_Controller {
 	 *
 	 */
 	public function invisible($course) {
+		if (!$this->authenticate_user($course, $this->input->post('id'))) {
+			echo json_encode(array('success' => false));
+			return false;
+		}
+
 		if ($this->Question_v1->set_show($this->input->post('id'), 0, $course))
 			echo json_encode(array('success' => true));
 		else
@@ -171,6 +232,11 @@ class Questions_v1 extends CI_Controller {
 	 *
 	 */
 	public function index() {
+		if (!$this->authenticate_user($course)) {
+			echo json_encode(array('success' => false));
+			return false;
+		}
+
 		$this->carabiner->js('questions/index.js');
 		$this->template->render();
 	}
@@ -201,6 +267,11 @@ class Questions_v1 extends CI_Controller {
 	 *
 	 */
 	public function queue($course, $force = false) {
+		if (!$this->authenticate_user($course)) {
+			echo json_encode(array('success' => false));
+			return false;
+		}
+
 		$queue = $this->Question_v1->get_queue($course, $force);
 		if ($queue) {
 			$queue['success'] = true;
@@ -215,6 +286,11 @@ class Questions_v1 extends CI_Controller {
 	 *
 	 */
 	public function visible($course) {
+		if (!$this->authenticate_user($course, $this->input->post('id'))) {
+			echo json_encode(array('success' => false));
+			return false;
+		}
+
 		if ($this->Question_v1->set_show($this->input->post('id'), 1, $course))
 			echo json_encode(array('success' => true));
 		else

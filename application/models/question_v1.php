@@ -84,6 +84,22 @@ class Question_v1 extends CI_Model {
 	}
 
 	/**
+	 * Ensure the current user has permission to operate on a question object
+	 * @param $course [String] Course url
+	 * @param $question_id [Integer] ID of question to operate on
+	 * @return True iff user owns question
+	 *
+	 */
+	public function check_permission($course, $question_id) {
+		session_start();
+		$user = isset($_SESSION[$course . '_user']) ? $_SESSION[$course . '_user'] : false;
+		session_write_close();
+		
+		$question = $this->db->get_where(self::TABLE, array(self::ID_COLUMN => $question_id))->row_array();
+		return ($question && $question[self::STUDENT_ID_COLUMN] == $user['identity']);
+	}
+
+	/**
 	 * Dispatch a list of questions to a TF
 	 * Side effect: clear dispatch history and queue from cache
 	 * @param $ids [Array] Array of question IDs to dispatch
@@ -214,9 +230,13 @@ class Question_v1 extends CI_Model {
 	 *
 	 */
 	public function login($student_id, $course) {
+		// re-activate most recently closed question
 		$this->db->set(self::STATE_COLUMN, self::STATE_HAND_UP)->
-			where(array(self::STUDENT_ID_COLUMN => $student_id, self::STATE_COLUMN => self::STATE_CLOSED));
+			where(array(self::STUDENT_ID_COLUMN => $student_id, self::STATE_COLUMN => self::STATE_CLOSED))->
+			order_by(self::TIMESTAMP_COLUMN . ' DESC')->limit(1);
 		$this->db->update(self::TABLE);
+
+		return true;
 	}
 
 	/**

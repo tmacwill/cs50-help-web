@@ -21,35 +21,6 @@ class Auth_v1 extends CI_Controller {
 	}
 
 	/**
-	 * Ensure user has the required permissions to perform an action
-	 *
-	 */
-	// @TODO: MAKE THIS SUCK LESS, WANT TO PASS SOMETHING LIKE 'LOGIN_RESTRICTED' => ARRAY('QUESTIONS/DISPATCH') AND 'CS50/QUESTIONS/DISPATCH'
-	public static function authenticate($course, $action, $id, $login_restricted, $current_login_restricted, $staff_restricted) {
-		session_start();
-		$user = isset($_SESSION[$course . '_user']) ? $_SESSION[$course . '_user'] : false;
-		$staff = isset($_SESSION[$course . '_staff']) ? $_SESSION[$course . '_staff'] : false;
-		session_write_close();
-		
-		// permit staff to take any action
-		if ($staff === false) {
-			// user is not logged in or is trying to take action on behalf of another user
-			if (($user === false && in_array($action, $login_restricted)) || in_array($action, $staff_restricted) ||
-					(($user === false || $user['identity'] != $id) && in_array($action, $current_login_restricted))) {
-				// @TODO: handle request denial better
-				if (isset($_REQUEST['format']) && $_REQUEST['format'] == 'json') {
-					echo json_encode(array('success' => false));
-					exit();
-				}
-				else {
-					redirect($course . '/auth/login');
-					exit();
-				}
-			}
-		}
-	}
-
-	/**
 	 * Redirect the user to CS50 ID
 	 *
 	 */

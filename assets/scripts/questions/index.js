@@ -463,7 +463,6 @@ function put_hand_down() {
 	var url = site_url + 'api/v1/questions/hand_down';
 	var data = {
 		id: question_id,
-		student_id: identity,
 	};
 
 	$.post(url, data, function(response) {
