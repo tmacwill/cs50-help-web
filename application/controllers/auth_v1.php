@@ -1,7 +1,7 @@
 <?php
 
-require_once(dirname(__FILE__) . '/cs50/CS50.php');
-//require_once('CS50/CS50.php');
+//require_once(dirname(__FILE__) . '/cs50/CS50.php');
+require_once('CS50/CS50.php');
 
 class Auth_v1 extends CI_Controller {
 	const STATE = '/var/www/html/application/cs50id_state';
@@ -11,41 +11,12 @@ class Auth_v1 extends CI_Controller {
 		$this->load->model('Spreadsheet_v1');
 
         if (getenv('SERVER') == 'DEV') {
-			define(TRUST_ROOT, 'http://192.168.56.50/auth/');
-			define(RETURN_TO, 'http://192.168.56.50/auth/return_to');
+			define('TRUST_ROOT', 'http://192.168.56.50/auth/');
+			define('RETURN_TO', 'http://192.168.56.50/auth/return_to');
 		}
 		else {
-			define(TRUST_ROOT, 'http://queue.cs50.net/auth/');
-			define(RETURN_TO, 'http://queue.cs50.net/auth/return_to');  
-		}
-	}
-
-	/**
-	 * Ensure user has the required permissions to perform an action
-	 *
-	 */
-	// @TODO: MAKE THIS SUCK LESS, WANT TO PASS SOMETHING LIKE 'LOGIN_RESTRICTED' => ARRAY('QUESTIONS/DISPATCH') AND 'CS50/QUESTIONS/DISPATCH'
-	public static function authenticate($course, $action, $id, $login_restricted, $current_login_restricted, $staff_restricted) {
-		session_start();
-		$user = isset($_SESSION[$course . '_user']) ? $_SESSION[$course . '_user'] : false;
-		$staff = isset($_SESSION[$course . '_staff']) ? $_SESSION[$course . '_staff'] : false;
-		session_write_close();
-		
-		// permit staff to take any action
-		if ($staff === false) {
-			// user is not logged in or is trying to take action on behalf of another user
-			if (($user === false && in_array($action, $login_restricted)) || in_array($action, $staff_restricted) ||
-					(($user === false || $user['identity'] != $id) && in_array($action, $current_login_restricted))) {
-				// @TODO: handle request denial better
-				if (isset($_REQUEST['format']) && $_REQUEST['format'] == 'json') {
-					echo json_encode(array('success' => false));
-					exit;
-				}
-				else {
-					redirect($course . '/auth/login');
-					exit;
-				}
-			}
+			define('TRUST_ROOT', 'http://queue.cs50.net/auth/');
+			define('RETURN_TO', 'http://queue.cs50.net/auth/return_to');  
 		}
 	}
 
@@ -113,11 +84,13 @@ class Auth_v1 extends CI_Controller {
 			// remove id URL from identity
 			$identity = substr($user['identity'], strlen('https://id.cs50.net/'));
 			$name = $user['fullname'];
+			$huid = $user['https://id.cs50.net/schema/harvardeduidnumber'][0];
 			
 			// store user info in course-specific key
 			$session_user = array(
 				'identity' => $identity,
 				'name' => $name,
+				'huid' => ($huid) ? $huid : 0,
 			);
 			$_SESSION[$course . '_user'] = $session_user;
 

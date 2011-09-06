@@ -13,6 +13,7 @@ class Question_v1 extends CI_Model {
 	const ID_COLUMN = 'id';
 	const STUDENT_ID_COLUMN = 'student_id';
 	const NAME_COLUMN = 'name';
+	const HUID_COLUMN = 'huid';
 	const COURSE_COLUMN = 'course';
 	const QUESTION_COLUMN = 'question';
 	const SHOW_COLUMN = 'show';
@@ -46,16 +47,24 @@ class Question_v1 extends CI_Model {
 	 *
 	 */
 	public function add($data, $course) {
-		if (!isset($data[self::STUDENT_ID_COLUMN]) || !isset($data[self::QUESTION_COLUMN]) || !isset($data[self::CATEGORY_COLUMN]))
+		if (!isset($data[self::QUESTION_COLUMN]) || !isset($data[self::CATEGORY_COLUMN]))
 			return false;
+
+		session_start();
+		$user = $_SESSION[$course . '_user'];
+		session_write_close();
 
 		// check if student already has his/her hand up
 		$student = $this->db->get_where(self::TABLE, array(self::COURSE_COLUMN => $course, 
-					self::STUDENT_ID_COLUMN => $data[self::STUDENT_ID_COLUMN], self::STATE_COLUMN => self::STATE_HAND_UP))->row();
+					self::STUDENT_ID_COLUMN => $user['identity'], self::STATE_COLUMN => self::STATE_HAND_UP))->row();
 
 		// student is not present yet and OHs are still in session, so add new question
 		if (!$student && $this->can_ask($course)) {
 			$data[self::COURSE_COLUMN] = $course;
+			$data[self::STUDENT_ID_COLUMN] = $user['identity'];
+			$data[self::NAME_COLUMN] = $user['name'];
+			$data[self::HUID_COLUMN] = $user['huid'];
+
 			$this->db->insert(self::TABLE, $data);
 			$this->memcache->delete($this->get_key_queue($course));
 			$this->memcache->set($this->get_key_queue_update($course), (string)time());
@@ -72,6 +81,22 @@ class Question_v1 extends CI_Model {
 	 */
 	public function can_ask($course) {
 		return $this->memcache->get($this->get_key_can_ask($course));
+	}
+
+	/**
+	 * Ensure the current user has permission to operate on a question object
+	 * @param $course [String] Course url
+	 * @param $question_id [Integer] ID of question to operate on
+	 * @return True iff user owns question
+	 *
+	 */
+	public function check_permission($course, $question_id) {
+		session_start();
+		$user = isset($_SESSION[$course . '_user']) ? $_SESSION[$course . '_user'] : false;
+		session_write_close();
+		
+		$question = $this->db->get_where(self::TABLE, array(self::ID_COLUMN => $question_id))->row_array();
+		return ($question && $question[self::STUDENT_ID_COLUMN] == $user['identity']);
 	}
 
 	/**
@@ -205,9 +230,13 @@ class Question_v1 extends CI_Model {
 	 *
 	 */
 	public function login($student_id, $course) {
+		// re-activate most recently closed question
 		$this->db->set(self::STATE_COLUMN, self::STATE_HAND_UP)->
-			where(array(self::STUDENT_ID_COLUMN => $student_id, self::STATE_COLUMN => self::STATE_CLOSED));
+			where(array(self::STUDENT_ID_COLUMN => $student_id, self::STATE_COLUMN => self::STATE_CLOSED))->
+			order_by(self::TIMESTAMP_COLUMN . ' DESC')->limit(1);
 		$this->db->update(self::TABLE);
+
+		return true;
 	}
 
 	/**

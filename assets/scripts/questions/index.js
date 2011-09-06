@@ -185,8 +185,8 @@ function add_question() {
 	// construct request
 	var url = site_url + 'api/v1/questions/add';
 	var data = {
-		student_id: identity,
-		name: name,
+		//student_id: identity,
+		//name: name,
 		question: question,
 		category: category,
 		category_color: category_color,
@@ -463,7 +463,6 @@ function put_hand_down() {
 	var url = site_url + 'api/v1/questions/hand_down';
 	var data = {
 		id: question_id,
-		student_id: identity,
 	};
 
 	$.post(url, data, function(response) {
