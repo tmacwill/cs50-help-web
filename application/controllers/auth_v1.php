@@ -1,7 +1,7 @@
 <?php
 
-require_once(dirname(__FILE__) . '/cs50/CS50.php');
-//require_once('CS50/CS50.php');
+//require_once(dirname(__FILE__) . '/cs50/CS50.php');
+require_once('CS50/CS50.php');
 
 class Auth_v1 extends CI_Controller {
 	const STATE = '/var/www/html/application/cs50id_state';
@@ -11,12 +11,12 @@ class Auth_v1 extends CI_Controller {
 		$this->load->model('Spreadsheet_v1');
 
         if (getenv('SERVER') == 'DEV') {
-			define(TRUST_ROOT, 'http://192.168.56.50/auth/');
-			define(RETURN_TO, 'http://192.168.56.50/auth/return_to');
+			define('TRUST_ROOT', 'http://192.168.56.50/auth/');
+			define('RETURN_TO', 'http://192.168.56.50/auth/return_to');
 		}
 		else {
-			define(TRUST_ROOT, 'http://queue.cs50.net/auth/');
-			define(RETURN_TO, 'http://queue.cs50.net/auth/return_to');  
+			define('TRUST_ROOT', 'http://queue.cs50.net/auth/');
+			define('RETURN_TO', 'http://queue.cs50.net/auth/return_to');  
 		}
 	}
 
@@ -39,11 +39,11 @@ class Auth_v1 extends CI_Controller {
 				// @TODO: handle request denial better
 				if (isset($_REQUEST['format']) && $_REQUEST['format'] == 'json') {
 					echo json_encode(array('success' => false));
-					exit;
+					exit();
 				}
 				else {
 					redirect($course . '/auth/login');
-					exit;
+					exit();
 				}
 			}
 		}
@@ -113,11 +113,13 @@ class Auth_v1 extends CI_Controller {
 			// remove id URL from identity
 			$identity = substr($user['identity'], strlen('https://id.cs50.net/'));
 			$name = $user['fullname'];
+			$huid = $user['https://id.cs50.net/schema/harvardeduidnumber'][0];
 			
 			// store user info in course-specific key
 			$session_user = array(
 				'identity' => $identity,
 				'name' => $name,
+				'huid' => ($huid) ? $huid : 0,
 			);
 			$_SESSION[$course . '_user'] = $session_user;
 

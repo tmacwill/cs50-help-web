@@ -185,8 +185,8 @@ function add_question() {
 	// construct request
 	var url = site_url + 'api/v1/questions/add';
 	var data = {
-		student_id: identity,
-		name: name,
+		//student_id: identity,
+		//name: name,
 		question: question,
 		category: category,
 		category_color: category_color,
