@@ -361,22 +361,28 @@ function get_queue(initial) {
 				// load queue into data store
 				var store = Ext.data.StoreManager.lookup('queue_store');
 				var queue_key = course + '_queue';
-				var question_text = '';
 
 				for (var question in response[queue_key]) {
-					if (response[queue_key][question].category) {
+					var question_text = '';
+
+					// make sure question has a category before displaying label
+					if (!response[queue_key][question].category.match(/^\s*$/)) {
 						question_text = '<span class="category-block category-' + (response[queue_key][question].category_color) + '">' + 
 							response[queue_key][question].category + '</span> ';
 					}
 
+					// append question after label, then set model value
 					question_text += response[queue_key][question].question;
 					response[queue_key][question].question = question_text;
 				}
+
+				// reload model once categories have been appended
 				store.loadData(response[queue_key]);
 				
 				// get our question from the store if it exists
 				question_index = store.findExact('student_id', identity);
 				if (question_index > -1) {
+					// change form state if we already asked a question
 					question_id = store.getAt(question_index).data.id;
 					hand_up = true;
 					if (!Number(store.getAt(question_index).data.show))
