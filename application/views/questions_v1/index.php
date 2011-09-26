@@ -6,4 +6,4 @@ var course = "<?php echo $course ?>";
 
 </script>
 
-<audio id="dispatch-sound" src="/assets/sounds/ding.wav">
+<audio id="dispatch-sound" src="/assets/sounds/ding.wav" loop>

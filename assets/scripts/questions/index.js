@@ -325,9 +325,29 @@ function get_dispatched(initial) {
 				// our question is considered dispatched until we ask another, so don't show multiple notifications for one dispatch
 				if (dispatch.length > 0) {
 					window.focus();
-					document.getElementById('dispatch-sound').play();
-					alert('It\'s your turn! Go see ' + dispatch[0].tf + '!');
-					window.focus();
+					var dispatch_sound = $('#dispatch-sound')[0];
+					dispatch_sound.play();
+
+					/*
+					setTimeout(function() {
+						dispatch_sound.pause();
+						dispatch_sound.currentTime = 0;
+					}, 5000);
+					*/
+
+					// show alerts
+					alert("It's your turn! Go see " + dispatch[0].tf + '!');
+					Ext.Msg.show({
+						title: "It's your turn!", 
+						msg: 'Go see ' + dispatch[0].tf + '!', 
+						buttons: Ext.Msg.OK,
+						closable: false,
+						fn: function(button_id, text, opt) {
+							// stop sound and reset once user closes messagebox
+							dispatch_sound.pause();
+							dispatch_sound.currentTime = 0;
+						}
+					});
 
 					question_id = null;
 					hand_up = false;

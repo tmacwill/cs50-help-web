@@ -1,5 +1,7 @@
 <?php
 
+require_once 'staff_v1.php';
+
 class Question_v1 extends CI_Model {
 	// state variables, used by controller as well
 	const STATE_HAND_UP = 0;
@@ -8,9 +10,13 @@ class Question_v1 extends CI_Model {
 	const STATE_CLOSED = 3;
 	const STATE_COMPLETED = 4;
 
-	// column names
+	// relevant tables
 	const TABLE = 'questions';
+	const STAFF_TABLE = 'staff';
+
+	// column names
 	const ID_COLUMN = 'id';
+	const STAFF_ID_COLUMN = 'staff_id';
 	const STUDENT_ID_COLUMN = 'student_id';
 	const NAME_COLUMN = 'name';
 	const HUID_COLUMN = 'huid';
@@ -21,7 +27,6 @@ class Question_v1 extends CI_Model {
 	const CATEGORY_COLOR_COLUMN = 'category_color';
 	const TIMESTAMP_COLUMN = 'timestamp';
 	const DISPATCH_TIMESTAMP_COLUMN = 'dispatch_timestamp';
-	const TF_COLUMN = 'tf';
 	const STATE_COLUMN = 'state';
 
 	// memcache instance and constants
@@ -35,6 +40,7 @@ class Question_v1 extends CI_Model {
 	function __construct() {
 		parent::__construct();
 		$this->load->model('Course_v1');
+		$this->load->model('Staff_v1');
 
 		// connect to memcache server
 		$this->memcache = new Memcache;
@@ -103,12 +109,12 @@ class Question_v1 extends CI_Model {
 	 * Dispatch a list of questions to a TF
 	 * Side effect: clear dispatch history and queue from cache
 	 * @param $ids [Array] Array of question IDs to dispatch
-	 * @param $tf [String] TF student has been dispatched to
+	 * @param $staff_id [String] ID of TF student has been dispatched to
 	 * @param $course [String] Course url
 	 *
 	 */
-	public function dispatch($ids, $tf, $course) {
-		if (empty($ids) || empty($tf)) 
+	public function dispatch($ids, $staff_id, $course) {
+		if (empty($ids) || empty($staff_id)) 
 			return false;
 
 		// get student ids corresponding to question ids
@@ -128,7 +134,8 @@ class Question_v1 extends CI_Model {
 		}
 
 		// mark questions as dispatched
-		$this->db->set(array(self::TF_COLUMN => $tf, self::STATE_COLUMN => self::STATE_DISPATCHED))->set(self::DISPATCH_TIMESTAMP_COLUMN, 'NOW()', false)->where_in(self::ID_COLUMN, $ids);
+		$this->db->set(array(self::STAFF_ID_COLUMN => $staff_id, self::STATE_COLUMN => self::STATE_DISPATCHED))->
+				set(self::DISPATCH_TIMESTAMP_COLUMN, 'NOW()', false)->where_in(self::ID_COLUMN, $ids);
 		$this->db->update(self::TABLE);
 
 		// update both queue and dispatch cache
@@ -146,7 +153,22 @@ class Question_v1 extends CI_Model {
 	 *
 	 */
 	public function get_dispatched($course, $force = false) {
-		return $this->long_poll($this->get_key_dispatched($course), self::STATE_DISPATCHED, $course, $force);
+		// long poll list of dispatched questions
+		$key = $this->get_key_dispatched($course);
+		$dispatched = $this->long_poll($key, self::STATE_DISPATCHED, $course, $force);
+		// get associative array of staff information
+		$staff = $this->Staff_v1->get_staff_assoc($course);
+
+		// iterate over dispatched questions to look up tf names
+		$i = 0;
+		$length = count($dispatched[$key]);
+		for ($i = 0; $i < $length; $i++) {
+			// include both name and username in the response
+			$dispatched[$key][$i]['tf'] = $staff[$dispatched[$key][$i][self::STAFF_ID_COLUMN]][Staff_v1::NAME_COLUMN];
+			$dispatched[$key][$i]['tf_username'] = $staff[$dispatched[$key][$i][self::STAFF_ID_COLUMN]][Staff_v1::USERNAME_COLUMN];
+		}
+
+		return $dispatched;
 	}
 
 	/**
@@ -209,14 +231,14 @@ class Question_v1 extends CI_Model {
 		$queue = $this->long_poll($this->get_key_queue($course), self::STATE_HAND_UP, $course, $force);
 
 		// assign positions and hide hidden questions
-		$i = 0;
-		foreach ($queue[$this->get_key_queue($course)] as $q) {
-			// TODO: convert long_polll to use result_array to avoid hard-coding column names here
-			$q->position = ++$i;
-			if (!$q->show && !isset($_SESSION[$course . '_staff'])) {
-				$q->name = 'Incognito';
-				$q->question = '';
-				$q->category = '';
+		$key = $this->get_key_queue($course);
+		$length = count($queue[$key]);
+		for ($i = 0; $i < $length; $i++) {
+			$queue[$key][$i]['position'] = ($i + 1);
+			if (!$queue[$key][$i][self::SHOW_COLUMN] && !isset($_SESSION[$course . '_staff'])) {
+				$queue[$key][$i][self::NAME_COLUMN] = 'Incognito';
+				$queue[$key][$i][self::QUESTION_COLUMN] = '';
+				$queue[$key][$i][self::CATEGORY_COLUMN] = '';
 			}
 		}
 		
@@ -267,8 +289,9 @@ class Question_v1 extends CI_Model {
 			// cache key expired or not using long-polling, so go to database for updated value
 			if ($result === null || $result === false || $force) {
 				// get all students with matching state for current date
+				// TODO: this is getting increasingly larger, we should only grab things within the past 24 hours or something
 				$result = $this->db->order_by(self::TIMESTAMP_COLUMN, 'asc')->
-					get_where(self::TABLE, array(self::STATE_COLUMN => $state, self::COURSE_COLUMN => $course))->result();
+					get_where(self::TABLE, array(self::STATE_COLUMN => $state, self::COURSE_COLUMN => $course))->result_array();
 
 				// empty queue and null key are two very different things
 				if ($result === null)

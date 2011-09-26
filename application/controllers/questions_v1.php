@@ -39,10 +39,6 @@ class Questions_v1 extends CI_Controller {
 					'field' => Question_v1::CATEGORY_COLUMN,
 					'rules' => self::FILTER
 				),
-				array(
-					'field' => Question_v1::TF_COLUMN,
-					'rules' => self::FILTER
-				)
 		);
 
 		// run form validation
