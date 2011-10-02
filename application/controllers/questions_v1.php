@@ -167,7 +167,7 @@ class Questions_v1 extends CI_Controller {
 		}
 
 		if ($this->Question_v1->set_queue_state($course, false))
-			echo json_encode(array('success' => true));
+			echo json_encode(array('success' => true, 'can_ask' => false));
 		else
 			echo json_encode(array('success' => false));
 	}
@@ -218,7 +218,7 @@ class Questions_v1 extends CI_Controller {
 		}
 
 		if ($this->Question_v1->set_queue_state($course, true))
-			echo json_encode(array('success' => true));
+			echo json_encode(array('success' => true, 'can_ask' => 'true'));
 		else
 			echo json_encode(array('success' => false));
 	}

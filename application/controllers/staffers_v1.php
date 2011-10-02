@@ -3,9 +3,23 @@
 class Staffers_v1 extends CI_Controller {
 	public function __construct() {
 		parent::__construct();
-		$this->load->model('Staff_v1');
+		$this->load->model('Attendance_v1');
 		$this->load->model('Schedule_v1');
+		$this->load->model('Staff_v1');
 	}
+
+	/**
+	 * Log the arrival of a staff member
+	 * @param $id [Integer] Staff id
+	 *
+	 */
+	public function arrival($course) {
+		if ($this->Attendance_v1->arrival($this->input->post('id')))
+			echo json_encode(array('success' => true));
+		else
+			echo json_encode(array('success' => false));
+	}
+
 
 	/**
 	 * Get all staffers, indicating who is on duty
