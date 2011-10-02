@@ -8,6 +8,11 @@ class Schedule_v1 extends CI_Model {
 	const TABLE = 'schedule';
 	const STAFF_TABLE = 'staff';
 
+	function __construct() {
+		parent::__construct();
+		$this->load->database();
+	}
+
 	/**
 	 * Get the IDs of all staff members on duty today
 	 * @param $course [String] Course ID for staff

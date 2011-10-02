@@ -13,6 +13,9 @@ class Staff_v1 extends CI_Model {
 	 *
 	 */
 	public function get_staff($course) {
+		// connect to database manually, because questions autoloads staff
+		$this->load->database();
+
 		$staff = $this->db->get_where(self::TABLE, array(self::COURSE_COLUMN => $course))->result_array();
 		return array('staff' => $staff);
 	}
@@ -23,6 +26,9 @@ class Staff_v1 extends CI_Model {
 	 *
 	 */
 	public function get_staff_assoc($course) {
+		// connect to database manually, because questions autoloads staff
+		$this->load->database();
+
 		// get staff from database
 		$staff = $this->db->get_where(self::TABLE, array(self::COURSE_COLUMN => $course))->result_array();
 
@@ -41,6 +47,9 @@ class Staff_v1 extends CI_Model {
 	 *
 	 */
 	public function get_info($id) {
+		// connect to database manually, because questions autoloads staff
+		$this->load->database();
+
 		return $this->db->get_where(self::TABLE, array(self::ID_COLUMN => $id))->row_array();
 	}
 }

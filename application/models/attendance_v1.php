@@ -6,6 +6,11 @@ class Attendance_v1 extends CI_Model {
 	const TIMESTAMP_COLUMN = 'timestamp';
 	const TABLE = 'attendance';
 
+	function __construct() {
+		parent::__construct();
+		$this->load->database();
+	}
+
 	/**
 	 * Log the arrival of a staff member
 	 * @param $staff_id [Integer] Staff ID

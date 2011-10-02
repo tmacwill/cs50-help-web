@@ -6,6 +6,11 @@ class Category_v1 extends CI_Model {
 	const DATE_COLUMN = 'date';
 	const TABLE = 'categories';
 
+	function __construct() {
+		parent::__construct();
+		$this->load->database();
+	}
+
 	/**
 	 * Get all categories for today
 	 * @param $course [String] Course url

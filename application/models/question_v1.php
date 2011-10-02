@@ -56,6 +56,9 @@ class Question_v1 extends CI_Model {
 		if (!isset($data[self::QUESTION_COLUMN]) || !isset($data[self::CATEGORY_COLUMN]))
 			return false;
 
+		// database required to add new question
+		$this->load->database();
+
 		session_start();
 		$user = $_SESSION[$course . '_user'];
 		session_write_close();
@@ -97,6 +100,9 @@ class Question_v1 extends CI_Model {
 	 *
 	 */
 	public function check_permission($course, $question_id) {
+		// database required to check student id of question
+		$this->load->database();
+
 		session_start();
 		$user = isset($_SESSION[$course . '_user']) ? $_SESSION[$course . '_user'] : false;
 		session_write_close();
@@ -116,6 +122,9 @@ class Question_v1 extends CI_Model {
 	public function dispatch($ids, $staff_id, $course) {
 		if (empty($ids) || empty($staff_id)) 
 			return false;
+
+		// database required to send question to staff
+		$this->load->database();
 
 		// get student ids corresponding to question ids
 		$student_id_results = $this->db->select(self::STUDENT_ID_COLUMN)->where_in(self::ID_COLUMN, $ids)->
@@ -148,6 +157,7 @@ class Question_v1 extends CI_Model {
 	}
 
 	/**
+	 * DEPRECATED IN V1.1
 	 * Get list of students' most recent dispatches
 	 * @param $force [Boolean] If true, force an immediate read from DB
 	 *
@@ -228,6 +238,12 @@ class Question_v1 extends CI_Model {
 	 *
 	 */
 	public function get_question($id) {
+		if (empty($id)) 
+			return false;
+
+		// database required to retrieve question data
+		$this->load->database();
+
 		$question = $this->db->get_where(self::TABLE, array(self::ID_COLUMN => $id))->row_array();
 		$staff = $this->Staff_v1->get_info($question[self::STAFF_ID_COLUMN]);
 
@@ -265,6 +281,12 @@ class Question_v1 extends CI_Model {
 	 *
 	 */
 	public function login($student_id, $course) {
+		if (empty($student_id) || empty($course)) 
+			return false;
+
+		// database required to re-open questions
+		$this->load->database();
+
 		// re-activate most recently closed question
 		$this->db->set(self::STATE_COLUMN, self::STATE_HAND_UP)->
 			where(array(self::STUDENT_ID_COLUMN => $student_id, self::STATE_COLUMN => self::STATE_CLOSED))->
@@ -301,6 +323,9 @@ class Question_v1 extends CI_Model {
 
 			// cache key expired or not using long-polling, so go to database for updated value
 			if ($result === null || $result === false || $force) {
+				// only connect to database if absolutely necessary, else use memcache and don't connect
+				$this->load->database();
+				
 				// calculate timestamps for yesterday and today
 				$yesterday = date('Y-m-d H:i:s', strtotime('-1 day'));
 				$tomorrow = date('Y-m-d H:i:s', strtotime('+1 day'));
@@ -362,6 +387,10 @@ class Question_v1 extends CI_Model {
 		if (empty($id))
 			return false;
 
+		// database connection required to change visibilty
+		$this->load->database();
+
+		// change visibility status and invalidate cached queue
 		$this->db->set(self::SHOW_COLUMN, $show)->where(array(self::ID_COLUMN => $id));
 		$this->db->update(self::TABLE);
 		$this->memcache->delete($this->get_key_queue($course));
@@ -379,7 +408,10 @@ class Question_v1 extends CI_Model {
 		if (empty($id) || empty($state))
 			return false;
 
-		// update database and invalidate cache
+		// database connection required to change state
+		$this->load->database();
+
+		// update database and invalidate cached queue
 		$this->db->set(self::STATE_COLUMN, $state)->where(array(self::ID_COLUMN => $id));
 		$this->db->update(self::TABLE);
 		$this->memcache->delete($this->get_key_queue($course));
