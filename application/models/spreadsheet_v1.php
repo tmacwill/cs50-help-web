@@ -1,7 +1,5 @@
 <?php
 
-require_once('iCalcreator.class.php');
-
 class Spreadsheet_v1 extends CI_Model {
 	const USERNAME_COLUMN = 'username';
 	const NAME_COLUMN = 'name';

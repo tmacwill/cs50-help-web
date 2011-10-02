@@ -263,14 +263,13 @@ function get_can_ask() {
 			can_ask = false;
 			disable_form('Office hours are not in session!');
 		}
-		else {
+		else
 			can_ask = true;
-		}
 
-		// TODO: check if 5 seconds is a reasonable timeout for this
+		// continue can ask loop
 		setTimeout(function() {
 			get_can_ask();
-		}, 5000);
+		}, 30000);
 	});
 }
 
@@ -280,7 +279,7 @@ function get_can_ask() {
  *
  */
 function get_categories() {
-	$.getJSON(site_url + 'api/v1/spreadsheets/categories', function(response) {
+	$.getJSON(site_url + 'api/v1/categories/today', function(response) {
 		// iterate over tab box
 		var tabs = Ext.getCmp('tabs');
 		var box = tabs.getBox();
@@ -294,9 +293,6 @@ function get_categories() {
 			});
 		}
 
-		// make sure other is always shown
-		response.categories.push({ category: "Other" });
-        
 		// load categories into data store
 		var store = Ext.data.StoreManager.lookup('category_store');
 		store.loadData(response.categories);
@@ -381,6 +377,7 @@ function get_queue(initial) {
 				// load queue into data store
 				var store = Ext.data.StoreManager.lookup('queue_store');
 				var queue_key = course + '_queue';
+				var question_found = false;
 
 				for (var question in response[queue_key]) {
 					var question_text = '';
@@ -394,11 +391,18 @@ function get_queue(initial) {
 					// append question after label, then set model value
 					question_text += response[queue_key][question].question;
 					response[queue_key][question].question = question_text;
+
+					// our question is in the queue, not dispatched
+					if (question_id != null && response[queue_key][question].id == question_id)
+						question_found = true;
 				}
 
+				// our question is no longer in the queue, so we must have been dispatched
+				if (!question_found && question_id != null)
+					show_dispatch_alert();
+				
 				// reload model once categories have been appended
 				store.loadData(response[queue_key]);
-				
 				// get our question from the store if it exists
 				question_index = store.findExact('student_id', identity);
 				if (question_index > -1) {
@@ -418,7 +422,7 @@ function get_queue(initial) {
 					enable_form();
 
 				// begin dispatched long-polling loop
-				setTimeout(function() { get_dispatched(true); }, 100);
+				//setTimeout(function() { get_dispatched(true); }, 100);
 			}
 
 			// don't force multiple DB reads
@@ -500,6 +504,43 @@ function put_hand_down() {
 		}
 		else
 			show_error();
+	});
+}
+
+/**
+ * Once current question has been dispatched, show alert to student
+ *
+ */
+function show_dispatch_alert() {
+	var url = site_url + 'api/v1/questions/get/' + question_id;
+
+	$.getJSON(url, function(response) {
+		if (question_id && response.success && response.staff) {
+			window.focus();
+			var dispatch_sound = $('#dispatch-sound')[0];
+			dispatch_sound.play();
+
+			// reset to ask another question
+			question_id = null;
+			hand_up = false;
+			enable_form();
+
+			// show alerts
+			alert("It's your turn! Go see " + response.staff.name + '!');
+			Ext.Msg.show({
+				title: "It's your turn!", 
+				msg: 'Go see ' + response.staff.name + '!', 
+				buttons: Ext.Msg.OK,
+				closable: false,
+				fn: function(button_id, text, opt) {
+					// stop sound and reset once user closes messagebox
+					dispatch_sound.pause();
+					dispatch_sound.currentTime = 0;
+
+				}
+			});
+
+		}
 	});
 }
 

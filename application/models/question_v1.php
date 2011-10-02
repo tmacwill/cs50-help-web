@@ -222,6 +222,19 @@ class Question_v1 extends CI_Model {
 	}
 
 	/**
+	 * Get a single question
+	 * @param $id [Integer] ID of question
+	 * @return Data for question
+	 *
+	 */
+	public function get_question($id) {
+		$question = $this->db->get_where(self::TABLE, array(self::ID_COLUMN => $id))->row_array();
+		$staff = $this->Staff_v1->get_info($question[self::STAFF_ID_COLUMN]);
+
+		return array('question' => $question, 'staff' => $staff);
+	}
+
+	/**
 	 * Get an ordered queue of all students with their hand up.
 	 * @param $force [Boolean] If true, force an immediate read from DB
 	 *
@@ -288,10 +301,15 @@ class Question_v1 extends CI_Model {
 
 			// cache key expired or not using long-polling, so go to database for updated value
 			if ($result === null || $result === false || $force) {
-				// get all students with matching state for current date
-				// TODO: this is getting increasingly larger, we should only grab things within the past 24 hours or something
+				// calculate timestamps for yesterday and today
+				$yesterday = date('Y-m-d H:i:s', strtotime('-1 day'));
+				$tomorrow = date('Y-m-d H:i:s', strtotime('+1 day'));
+
+				// get all students with matching state for past 24 hours
 				$result = $this->db->order_by(self::TIMESTAMP_COLUMN, 'asc')->
-					get_where(self::TABLE, array(self::STATE_COLUMN => $state, self::COURSE_COLUMN => $course))->result_array();
+					get_where(self::TABLE, array(self::STATE_COLUMN => $state, self::COURSE_COLUMN => $course,
+						self::TIMESTAMP_COLUMN . ' >' => $yesterday, self::TIMESTAMP_COLUMN . ' <' => $tomorrow))->
+					result_array();
 
 				// empty queue and null key are two very different things
 				if ($result === null)
@@ -321,6 +339,17 @@ class Question_v1 extends CI_Model {
 		}
 
 		return array($memcache_key => $result, 'changed' => false);
+	}
+
+	/**
+	 * Set the state of the queue
+	 * @param $course [String] Course url
+	 * @param $state [Boolean] True for on, false for off
+	 *
+	 */
+	public function set_queue_state($course, $state) {
+		$this->memcache->set($this->get_key_can_ask($course), $state);
+		return true;
 	}
 
 	/**

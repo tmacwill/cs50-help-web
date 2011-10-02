@@ -2,6 +2,7 @@
 
 class Staff_v1 extends CI_Model {
 	const COURSE_COLUMN = 'course';
+	const ID_COLUMN = 'id';
 	const NAME_COLUMN = 'name';
 	const USERNAME_COLUMN = 'username';
 	const TABLE = 'staff';
@@ -31,6 +32,16 @@ class Staff_v1 extends CI_Model {
 			$return_array[strval($s['id'])] = $s;
 
 		return $return_array;
+	}
+
+	/**
+	 * Get the username for a given staffer
+	 * @param $id [Integer] Staff id
+	 * @return Staff username
+	 *
+	 */
+	public function get_info($id) {
+		return $this->db->get_where(self::TABLE, array(self::ID_COLUMN => $id))->row_array();
 	}
 }
 

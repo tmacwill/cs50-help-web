@@ -16,7 +16,6 @@ class Schedule_v1 extends CI_Model {
 	public function get_on_duty_ids($course) {
 		// get text of today's day
 		$day = date('l');
-		$day = 'Monday';
 
 		// get IDs of staff members who belong to the given course and are on duty today
 		$result = $this->db->select(self::STAFF_ID_COLUMN)->join(self::STAFF_TABLE, self::TABLE . '.staff_id = ' . self::STAFF_TABLE . '.id')->
