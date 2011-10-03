@@ -6,6 +6,7 @@ class Course_v1 extends CI_Model {
 	const TABLE = 'courses';
 
 	/**
+	 * DEPRECATED IN BY v1.1
 	 * Get url of categories spreadsheet
 	 * @param $url Course url
 	 *
@@ -20,11 +21,13 @@ class Course_v1 extends CI_Model {
 	 *
 	 */
 	public function get_courses() {
+		$this->load->database();
 		$courses = $this->db->select(self::NAME_COLUMN . ',' . self::URL_COLUMN)->get(self::TABLE)->result();
 		return array('courses' => $courses);
 	}
 
 	/**
+	 * DEPRECATED IN BY v1.1
 	 * Get url or schedule gcal
 	 * @param $url Course url
 	 *
@@ -35,6 +38,7 @@ class Course_v1 extends CI_Model {
 	}
 
 	/**
+	 * DEPRECATED IN BY v1.1
 	 * Get url of staff spreadsheet
 	 * @param $url Course url
 	 *
@@ -45,6 +49,7 @@ class Course_v1 extends CI_Model {
 	}
 
 	/**
+	 * DEPRECATED IN BY v1.1
 	 * Get url of students spreadsheet
 	 * @param $url Course url
 	 *

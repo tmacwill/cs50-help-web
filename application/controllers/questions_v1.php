@@ -39,10 +39,6 @@ class Questions_v1 extends CI_Controller {
 					'field' => Question_v1::CATEGORY_COLUMN,
 					'rules' => self::FILTER
 				),
-				array(
-					'field' => Question_v1::TF_COLUMN,
-					'rules' => self::FILTER
-				)
 		);
 
 		// run form validation
@@ -161,6 +157,22 @@ class Questions_v1 extends CI_Controller {
 	}
 
 	/**
+	 * Turn off the queue
+	 *
+	 */
+	public function disable($course) {
+		if (!$this->authenticate_staff($course)) {
+			echo json_encode(array('success' => false));
+			return false;
+		}
+
+		if ($this->Question_v1->set_queue_state($course, false))
+			echo json_encode(array('success' => true, 'can_ask' => false));
+		else
+			echo json_encode(array('success' => false));
+	}
+
+	/**
 	 * Dispatch a student to a TF
 	 *
 	 */
@@ -191,6 +203,22 @@ class Questions_v1 extends CI_Controller {
 			$dispatched['success'] = true;
 			echo json_encode($dispatched);
 		}
+		else
+			echo json_encode(array('success' => false));
+	}
+
+	/**
+	 * Turn on the queue
+	 *
+	 */
+	public function enable($course) {
+		if (!$this->authenticate_staff($course)) {
+			echo json_encode(array('success' => false));
+			return false;
+		}
+
+		if ($this->Question_v1->set_queue_state($course, true))
+			echo json_encode(array('success' => true, 'can_ask' => 'true'));
 		else
 			echo json_encode(array('success' => false));
 	}
@@ -228,10 +256,35 @@ class Questions_v1 extends CI_Controller {
 	}
 
 	/**
+	 * Get info for a single question
+	 * @param $course [String] Course url
+	 * @param $id [Integer] Question id
+	 * @return Information for question
+	 *
+	 */
+	public function get($course, $id) {
+		if (!$this->authenticate_user($course, $this->input->post('id'))) {
+			echo json_encode(array('success' => false));
+			return false;
+		}
+
+		$question = $this->Question_v1->get_question($id);
+		if ($question) {
+			$question['success'] = true;
+			echo json_encode($question);
+		}
+		else
+			echo json_encode(array('success' => false));
+	}
+
+	/**
 	 * Main page for student help
 	 *
 	 */
-	public function index() {
+	public function index($course = '') {
+		if (empty($course))
+			$course = 'cs50';
+
 		if (!$this->authenticate_user($course)) {
 			echo json_encode(array('success' => false));
 			return false;
@@ -256,10 +309,11 @@ class Questions_v1 extends CI_Controller {
 	 * Main page for student help (alias for index)
 	 *
 	 */
-	public function q() {
+	public function q($course = '') {
 		$this->template->current_view = 'questions_v1/index';
-		$this->carabiner->js('questions/index.js');
-		$this->template->render();
+		//$this->carabiner->js('questions/index.js');
+		//$this->template->render();
+		return $this->index($course);
 	}
 
 	/**

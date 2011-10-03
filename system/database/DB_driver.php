@@ -143,11 +143,13 @@ class CI_DB_driver {
 			}
 			else
 			{
+				/*
 				// We've selected the DB. Now we set the character set
 				if ( ! $this->db_set_charset($this->char_set, $this->dbcollat))
 				{
 					return FALSE;
 				}
+				 */
 
 				return TRUE;
 			}
