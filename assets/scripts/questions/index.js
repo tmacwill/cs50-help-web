@@ -515,7 +515,7 @@ function show_dispatch_alert() {
 	var url = site_url + 'api/v1/questions/get/' + question_id;
 
 	$.getJSON(url, function(response) {
-		if (question_id && response.success && response.staff) {
+		if (question_id && response.success && response.staff.name) {
 			window.focus();
 			var dispatch_sound = $('#dispatch-sound')[0];
 			dispatch_sound.play();
