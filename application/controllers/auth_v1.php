@@ -8,7 +8,7 @@ class Auth_v1 extends CI_Controller {
 
 	function __construct() {
 		parent::__construct();
-		$this->load->model('Spreadsheet_v1');
+		$this->load->model('Staff_v1');
 
         if (getenv('SERVER') == 'DEV') {
 			define('TRUST_ROOT', 'http://192.168.56.50/auth/');
@@ -126,10 +126,10 @@ class Auth_v1 extends CI_Controller {
 	 *
 	 */
 	private function verify_staff($user, $course) {
-		$staff = $this->Spreadsheet_v1->get_staff($course);
+		$staff = $this->Staff_v1->get_staff($course);
 		$is_staff = false;
 		
-		// iterate over all staff members from spreadsheet
+		// iterate over all staff members 
 		foreach ($staff['staff'] as $s) {
 			if ($user['email'] == $s['email']) {
 				$is_staff = true;
@@ -158,24 +158,6 @@ class Auth_v1 extends CI_Controller {
 	private function verify_student($user, $course) {
 		// temporarily allow anyone to log in
 		return true;
-
-		$students = $this->Spreadsheet_v1->get_students($course);
-		$is_student = false;
-	
-		// iterate over all staff members from spreadsheet
-		foreach ($students['students'] as $s) {
-			if ($user['https://id.cs50.net/schema/harvardeduidnumber'][0] == $s) {
-				$is_student = true;
-				break;
-			}
-		}
-
-		// logged-in user is not a student of this course, so redirect back to login page
-		if (!$is_student) {
-			echo json_encode(array('success' => false));
-			redirect($course . '/auth/login');
-			return;
-		}
 	}
 }
 

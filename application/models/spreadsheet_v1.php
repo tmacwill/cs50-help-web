@@ -36,7 +36,8 @@ class Spreadsheet_v1 extends CI_Model {
 		$return_array = array();
 		foreach ($spreadsheet as $row_csv) {
 			$row = explode(",", $row_csv);
-			$return_array[] = array('category' => $row[$column]);
+			if (isset($row[$column]))
+				$return_array[] = array('category' => $row[$column]);
 		}
 
 		// remote date from list of categories
@@ -49,8 +50,13 @@ class Spreadsheet_v1 extends CI_Model {
 	 *
 	 */
 	public function get_schedule($course) {
+		date_default_timezone_set("America/New_York");
 		// get all TFs/CAs
 		$staff = $this->get_staff($course);
+
+
+		$vcalendar = new vcalendar();
+
 
 		// get XML representation of GCal
 		$url = $this->Course_v1->get_schedule_url($course);
@@ -63,12 +69,14 @@ class Spreadsheet_v1 extends CI_Model {
 		foreach ($schedule_xml->entry as $event) {
 			$matches = array();
 			preg_match('/When: (\w+ \w+ \d+, \d+)/', (string)$event->summary, $matches);
-			$date = $matches[1];
-			if (date('D M j, Y') == $matches[1]) {
-				// title of event must be CSV of staff
-				$on_duty = explode(',', (string)$event->title);
-				$on_duty = array_map('trim', $on_duty);
-				break;
+			if (count($matches) > 0) {
+				$date = $matches[1];
+				if (date('D M j, Y') == $matches[1]) {
+					// title of event must be CSV of staff
+					$on_duty = explode(',', (string)$event->title);
+					$on_duty = array_map('trim', $on_duty);
+					break;
+				}
 			}
 		}
 
