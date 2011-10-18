@@ -63,17 +63,24 @@ class Question_v1 extends CI_Model {
 		$user = $_SESSION[$course . '_user'];
 		session_write_close();
 
+		// calculate timestamps for yesterday and today
+		$yesterday = date('Y-m-d H:i:s', strtotime('-1 day'));
+		$tomorrow = date('Y-m-d H:i:s', strtotime('+1 day'));
+
 		// check if student already has his/her hand up
 		$student = $this->db->get_where(self::TABLE, array(self::COURSE_COLUMN => $course, 
+					self::TIMESTAMP_COLUMN . ' >' => $yesterday, self::TIMESTAMP_COLUMN . ' <' => $tomorrow,
 					self::STUDENT_ID_COLUMN => $user['identity'], self::STATE_COLUMN => self::STATE_HAND_UP))->row();
 
 		// student is not present yet and OHs are still in session, so add new question
 		if (!$student && $this->can_ask($course)) {
+			// construct object to write to database
 			$data[self::COURSE_COLUMN] = $course;
 			$data[self::STUDENT_ID_COLUMN] = $user['identity'];
 			$data[self::NAME_COLUMN] = $user['name'];
 			$data[self::HUID_COLUMN] = $user['huid'];
 
+			// write question to database and invalidate cache
 			$this->db->insert(self::TABLE, $data);
 			$this->memcache->delete($this->get_key_queue($course));
 			$this->memcache->set($this->get_key_queue_update($course), (string)time());
@@ -107,6 +114,7 @@ class Question_v1 extends CI_Model {
 		$user = isset($_SESSION[$course . '_user']) ? $_SESSION[$course . '_user'] : false;
 		session_write_close();
 		
+		// return if question belongs to teh current user
 		$question = $this->db->get_where(self::TABLE, array(self::ID_COLUMN => $question_id))->row_array();
 		return ($question && $question[self::STUDENT_ID_COLUMN] == $user['identity']);
 	}
@@ -244,6 +252,7 @@ class Question_v1 extends CI_Model {
 		// database required to retrieve question data
 		$this->load->database();
 
+		// get question and associated staff
 		$question = $this->db->get_where(self::TABLE, array(self::ID_COLUMN => $id))->row_array();
 		$staff = $this->Staff_v1->get_info($question[self::STAFF_ID_COLUMN]);
 
@@ -287,9 +296,14 @@ class Question_v1 extends CI_Model {
 		// database required to re-open questions
 		$this->load->database();
 
+		// calculate timestamps for yesterday and today
+		$yesterday = date('Y-m-d H:i:s', strtotime('-1 day'));
+		$tomorrow = date('Y-m-d H:i:s', strtotime('+1 day'));
+
 		// re-activate most recently closed question
 		$this->db->set(self::STATE_COLUMN, self::STATE_HAND_UP)->
-			where(array(self::STUDENT_ID_COLUMN => $student_id, self::STATE_COLUMN => self::STATE_CLOSED))->
+			where(array(self::STUDENT_ID_COLUMN => $student_id, self::STATE_COLUMN => self::STATE_CLOSED,
+				self::TIMESTAMP_COLUMN . ' >' => $yesterday, self::TIMESTAMP_COLUMN . ' <' => $tomorrow))->
 			order_by(self::TIMESTAMP_COLUMN . ' DESC')->limit(1);
 		$this->db->update(self::TABLE);
 

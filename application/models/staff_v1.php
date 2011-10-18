@@ -16,7 +16,9 @@ class Staff_v1 extends CI_Model {
 		// connect to database manually, because questions autoloads staff
 		$this->load->database();
 
-		$staff = $this->db->get_where(self::TABLE, array(self::COURSE_COLUMN => $course))->result_array();
+		// get all staff, ordered by name
+		$staff = $this->db->order_by(self::NAME_COLUMN . ' ASC')->get_where(self::TABLE, 
+			array(self::COURSE_COLUMN => $course))->result_array();
 		return array('staff' => $staff);
 	}
 
@@ -30,7 +32,7 @@ class Staff_v1 extends CI_Model {
 		$this->load->database();
 
 		// get staff from database
-		$staff = $this->db->get_where(self::TABLE, array(self::COURSE_COLUMN => $course))->result_array();
+		$staff = $this->get_staff($course);
 
 		// convert list of staff to associative array, indexed by staff ID
 		$return_array = array();
