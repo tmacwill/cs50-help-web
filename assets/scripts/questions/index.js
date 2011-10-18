@@ -116,7 +116,7 @@ Ext.onReady(function() {
 				xtype: 'gridpanel',
 				flex: 1,
 				id: 'queueContainer',
-				title: 'Queue',
+				title: 'The queue will close at 11:15pm!',
 				store: Ext.data.StoreManager.lookup('queue_store'),
 				autoScroll: true,
 				columns: [
@@ -261,7 +261,7 @@ function get_can_ask() {
 	$.getJSON(site_url + 'api/v1/questions/can_ask', function(response) {
 		if (!response.can_ask) {
 			can_ask = false;
-			disable_form('Office hours are not in session!');
+			disable_form('The queue is currently closed!');
 		}
 		else
 			can_ask = true;
